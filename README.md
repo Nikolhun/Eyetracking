@@ -10,5 +10,7 @@ eye_tracking is old py file with blob proces detection ans finding best treshold
 
 aktivni_kontury is py file for detecting eye region with dlib landmark
 
+eye_tracking is extended aktivni_kontury py file. The is detection using hough circles, but does not work properly. 
+
 
 
