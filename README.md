@@ -12,5 +12,9 @@ aktivni_kontury is py file for detecting eye region with dlib landmark
 
 eye_tracking is extended aktivni_kontury py file. The is detection using hough circles, but does not work properly. 
 
+pose_estimation should do pose estimation, but it is not finished yet. 
+
+
+
 
 
