@@ -5,3 +5,6 @@ Eye movement tracking using the Raspberry Pi platform.
 It also works on webcamera.
 
 You need to download: shape_predictor_68_face_landmarks.dat
+
+eye_tracking is old file with blob proces detection ans finding best treshold manualy
+
