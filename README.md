@@ -14,6 +14,8 @@ eye_tracking is extended aktivni_kontury py file. The is detection using hough c
 
 pose_estimation should do pose estimation, but it is not finished yet. 
 
+haarcascade and landmarks files are just files(pictures, matrixs) used in detection proces.
+
 
 
 
