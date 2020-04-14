@@ -2,19 +2,15 @@
 Eye movement tracking using the Raspberry Pi platform.
 
 
-It also works with webcamera.
+These ".py" scripts works with webcamera so far. 
+ 
+File "detect_pupil_haar_cascade.py" detect pupil using Haar Cascade - you need file haarcascade_eye.xml and haarcascade_frontalface_default.xml from Haar_cascade
 
-You need to download: shape_predictor_68_face_landmarks.dat
-
-eye_tracking is old py file with blob proces detection ans finding best treshold manualy
-
-aktivni_kontury is py file for detecting eye region with dlib landmark
-
-eye_tracking is extended aktivni_kontury py file. The is detection using hough circles, but does not work properly. 
-
-pose_estimation should do pose estimation, but it is not finished yet. 
-
-haarcascade and landmarks files are just files(pictures, matrixs) used in detection proces.
+File "eyetracker.py" detects eye pupil and shows eye vector. There are two ways of detection eye pupil:
+ 
+1) Haar cascade - You need file haarcascade_eye.xml and haarcascade_frontalface_default.xml from Haar_cascade
+ 
+2) Dlib landmarks - You need file shape_predictor_68_face_landmarks.dat in Dlib_landarks
 
 
 
