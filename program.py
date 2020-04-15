@@ -39,8 +39,8 @@ def nothing(x):
 def main():
     cap = cv2.VideoCapture(0)  # reaching the port 0 for video capture
     cv2.namedWindow('Dlib Landmarks')  # Dlib landmark left eye
-    cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     cv2.createTrackbar('Right', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
+    cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     left_center_pupil_in_eye_frame = [0, 0]
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
