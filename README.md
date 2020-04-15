@@ -1,7 +1,7 @@
 # Eyetracking
 Eye movement tracking using the Raspberry Pi platform.
 
-Run "program.py" for starting the program. 
+Run "program.py" for runing the program. 
 
 These ".py" scripts works with webcamera so far. 
  
