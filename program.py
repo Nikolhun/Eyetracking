@@ -4,6 +4,7 @@ from dlib_landmarks import draw_point, eye_center_dlib, landmarks_array, fill_fr
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import detect_corneal_reflection
 from vector import find_vector
+from calibration import upper_left, upper_right, lower_left, lower_right
 
 #######################################################################################################################
 # ------------------------------- Initiation part ------------------------------------------------------------------- #
@@ -153,6 +154,11 @@ def main():
                                         cv2.arrowedLine(frame, start_right, end_right,
                                                              color=(0, 255, 0), thickness=1)
 
+                            upper_left_corner = upper_left(output_vector_in_eye_frame[2])
+                            upper_right_corner = upper_right(output_vector_in_eye_frame[2])
+                            lower_left_corner = lower_right(output_vector_in_eye_frame[2])
+                            lower_right_corner = lower_left(output_vector_in_eye_frame[2])
+                            print(lower_right_corner)
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
 
         if cv2.waitKey(1) & 0xFF == ord('q'):  # "q" means close the detection
