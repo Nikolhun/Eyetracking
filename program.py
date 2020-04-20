@@ -5,7 +5,11 @@ from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, pr
 from corneal_reflection import detect_corneal_reflection
 from vector import find_vector
 from calibration import upper_left, upper_right, lower_left, lower_right
-import threading
+import keyboard
+
+print("Set threshold for left and right eye.")
+print("Start and end vector mode by pressing v.")
+print("Start and end calibration mode by pressing c.")
 
 #######################################################################################################################
 # ------------------------------- Initiation part ------------------------------------------------------------------- #
@@ -44,12 +48,18 @@ def main():
     left_center_pupil_in_eye_frame = [0, 0]
     right_center_pupil_in_eye_frame = [0, 0]
     output_vector_in_eye_frame = [0, 0, 0]
+    left_eye_crop = [0, 0]
+    right_eye_crop = [0, 0]
+    min_left = [0, 0]
+    min_right = [0, 0]
+    vector_mode = False
+    calibration_mode = False
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-# ---------------------------------- Dlib Landmark ------------------------------------------------------------------ #
+# ---------------------------------- Dlib Landmark face detection --------------------------------------------------- #
         faces = detector_dlib(gray)
         for face in faces:
             #view_face_frame(face, frame)  # view face frame
@@ -74,7 +84,7 @@ def main():
             # for i in range(0, 67):
             #   draw_point(i, landmarks, frame)
 
-            # left eye
+# ---------------------------------- Left eye ---------------------------------------------------------------------- #
             threshold_left = cv2.getTrackbarPos('Right', 'Dlib Landmarks')  # getting position of the trackbar
             no_reflex_left = detect_corneal_reflection(left_eye_crop, threshold_left)
             hsv_img_left = converting_gray_to_hsv(no_reflex_left)
@@ -96,7 +106,7 @@ def main():
                             left_center_pupil_in_eye_frame = [cx_left, cy_left]
                             cv2.circle(frame, (left_center_pupil[0], left_center_pupil[1]), 1, (255, 0, 0), 2)
 
-            # right eye
+# ---------------------------------- Left eye ---------------------------------------------------------------------- #
             threshold_right = cv2.getTrackbarPos('Left', 'Dlib Landmarks')  # getting position of the trackbar
             no_reflex_right = detect_corneal_reflection(right_eye_crop, threshold_right)
             hsv_img_right = converting_gray_to_hsv(no_reflex_right)
@@ -122,7 +132,21 @@ def main():
                             cv2.circle(frame, (right_center_pupil[0], right_center_pupil[1]), 1,
                                        (255, 0, 0), 2)
 
-            #input('Set right and left eye threshold and press ENTER.')
+# ---------------------------------- Quit program after pressing q -------------------------------------------------- #
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):  # "q" means close the detection
+            break
+
+# ---------------------------------- Show vector after pressing v --------------------------------------------------- #
+
+        if keyboard.is_pressed("v"):  # "q" means close the detection
+            if vector_mode == True:
+                vector_mode = False
+                print("Vector mode deactivated.")
+            elif vector_mode == False:
+                vector_mode = True
+                print("Vector mode activated.")
+        if vector_mode:
             # finding eye center
             left_center_eye, left_center_eye_in_eye_frame = eye_center_dlib(left_eye_crop, [min_left[0], min_left[1]])
             right_center_eye, right_center_eye_in_eye_frame = eye_center_dlib(right_eye_crop, [min_right[0],
@@ -138,37 +162,45 @@ def main():
 
             # end of vector
             end_left = (output_vector_in_eye_frame[0] + left_center_eye[0],
-                        output_vector_in_eye_frame[1] + left_center_eye[1])
+                    output_vector_in_eye_frame[1] + left_center_eye[1])
             end_right = (output_vector_in_eye_frame[0] + right_center_eye[0],
-                         output_vector_in_eye_frame[1] + right_center_eye[1])
+                     output_vector_in_eye_frame[1] + right_center_eye[1])
 
             if end_left == [0, 0] or end_right == [0, 0]:
-                print("Pupil not detected, set threshold in left/right trackbar.")
-            else:
-                if end_left is not None and end_right is not None:
-                    if output_vector_in_eye_frame[2] > 1:
-                        cv2.arrowedLine(frame, start_left, end_left, color=(0, 255, 0), thickness=1)
-                        cv2.arrowedLine(frame, start_right, end_right, color=(0, 255, 0), thickness=1)
+                print("Pupil not detected. Try to adjust threshold better and press v again..")
+            if end_left is not None and end_right is not None:
+                if output_vector_in_eye_frame[2] > 1:
+                    cv2.arrowedLine(frame, start_left, end_left, color=(0, 255, 0), thickness=1)
+                    cv2.arrowedLine(frame, start_right, end_right, color=(0, 255, 0), thickness=1)
 
+# ---------------------------------- Start calibration after pressing c --------------------------------------------- #
+
+        if keyboard.is_pressed("c"):  # "c" means start the calibration
+            if calibration_mode == True:
+                calibration_mode = False
+                print("Calibration mode deactivated.")
+            elif calibration_mode == False:
+                calibration_mode = True
+                print("Calibration mode activated.")
+            upper_left_corner = upper_right_corner = lower_left_corner = lower_right_corner = [0, 0]
+
+        if calibration_mode:
             if output_vector_in_eye_frame == [0, 0, 0]:
-                print("Eror nějaký")
-            else:
+                print("Try to adjust threshold better and start calibration mode again.")
+            elif output_vector_in_eye_frame != [0, 0, 0]:
                 upper_left_corner = upper_left(output_vector_in_eye_frame)
                 upper_right_corner = upper_right(output_vector_in_eye_frame)
                 lower_left_corner = lower_right(output_vector_in_eye_frame)
                 lower_right_corner = lower_left(output_vector_in_eye_frame)
-                print(lower_right_corner)
-        cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
+                if upper_left_corner != [0, 0] and upper_right_corner != [0, 0] and \
+                        lower_left_corner != [0, 0] and lower_right_corner != [0, 0]:
+                    print("Data for calibration were taken.")
+                    calibration_mode = False
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):  # "q" means close the detection
-            break
+        cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
     cap.release()
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
     main()
-
-threading1 = threading.Thread(target=background)
-threading1.daemon = True
-threading1.start()
