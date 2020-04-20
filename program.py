@@ -5,6 +5,7 @@ from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, pr
 from corneal_reflection import detect_corneal_reflection
 from vector import find_vector
 from calibration import upper_left, upper_right, lower_left, lower_right
+import threading
 
 #######################################################################################################################
 # ------------------------------- Initiation part ------------------------------------------------------------------- #
@@ -41,6 +42,8 @@ def main():
     cv2.createTrackbar('Right', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     left_center_pupil_in_eye_frame = [0, 0]
+    right_center_pupil_in_eye_frame = [0, 0]
+    output_vector_in_eye_frame = [0, 0, 0]
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
@@ -92,6 +95,7 @@ def main():
                             left_center_pupil = [cx_left + min_left[0], cy_left + min_left[1]]
                             left_center_pupil_in_eye_frame = [cx_left, cy_left]
                             cv2.circle(frame, (left_center_pupil[0], left_center_pupil[1]), 1, (255, 0, 0), 2)
+
             # right eye
             threshold_right = cv2.getTrackbarPos('Left', 'Dlib Landmarks')  # getting position of the trackbar
             no_reflex_right = detect_corneal_reflection(right_eye_crop, threshold_right)
@@ -116,47 +120,44 @@ def main():
                             right_center_pupil = [cx_right + min_right[0], cy_right + min_right[1]]
                             right_center_pupil_in_eye_frame = [cx_right, cy_right]
                             cv2.circle(frame, (right_center_pupil[0], right_center_pupil[1]), 1,
-                                               (255, 0, 0), 2)
+                                       (255, 0, 0), 2)
 
-                            # finding eye center
-                            left_center_eye, left_center_eye_in_eye_frame = eye_center_dlib(left_eye_crop,
-                                                                                                    [min_left[0],
-                                                                                                     min_left[1]])
-                            right_center_eye, right_center_eye_in_eye_frame = eye_center_dlib(right_eye_crop,
-                                                                                                      [min_right[0],
-                                                                                                       min_right[1]])
+            #input('Set right and left eye threshold and press ENTER.')
+            # finding eye center
+            left_center_eye, left_center_eye_in_eye_frame = eye_center_dlib(left_eye_crop, [min_left[0], min_left[1]])
+            right_center_eye, right_center_eye_in_eye_frame = eye_center_dlib(right_eye_crop, [min_right[0],
+                                                                                               min_right[1]])
 
-                            # finding vector
-                            output_vector_in_eye_frame = find_vector(left_center_pupil_in_eye_frame,
-                                                                    left_center_eye_in_eye_frame,
-                                                                    right_center_pupil_in_eye_frame,
-                                                                    right_center_eye_in_eye_frame)
+            # finding vector
+            output_vector_in_eye_frame = find_vector(left_center_pupil_in_eye_frame, left_center_eye_in_eye_frame,
+                                                     right_center_pupil_in_eye_frame, right_center_eye_in_eye_frame)
 
-                            # start of vector
-                            start_left = (left_center_eye[0], left_center_eye[1])
-                            start_right = (right_center_eye[0], right_center_eye[1])
+            # start of vector
+            start_left = (left_center_eye[0], left_center_eye[1])
+            start_right = (right_center_eye[0], right_center_eye[1])
 
-                            # end of vector
-                            end_left = (output_vector_in_eye_frame[0] + left_center_eye[0],
-                                                   output_vector_in_eye_frame[1] + left_center_eye[1])
-                            end_right = (output_vector_in_eye_frame[0] + right_center_eye[0],
-                                                   output_vector_in_eye_frame[1] + right_center_eye[1])
+            # end of vector
+            end_left = (output_vector_in_eye_frame[0] + left_center_eye[0],
+                        output_vector_in_eye_frame[1] + left_center_eye[1])
+            end_right = (output_vector_in_eye_frame[0] + right_center_eye[0],
+                         output_vector_in_eye_frame[1] + right_center_eye[1])
 
-                            if end_left == [0, 0] or end_right == [0, 0]:
-                                print("Pupil not detected, set threshold in left/right trackbar.")
-                            else:
-                                if end_left is not None and end_right is not None:
-                                    if output_vector_in_eye_frame[2] > 1:
-                                        cv2.arrowedLine(frame, start_left, end_left,
-                                                             color=(0, 255, 0), thickness=1)
-                                        cv2.arrowedLine(frame, start_right, end_right,
-                                                             color=(0, 255, 0), thickness=1)
+            if end_left == [0, 0] or end_right == [0, 0]:
+                print("Pupil not detected, set threshold in left/right trackbar.")
+            else:
+                if end_left is not None and end_right is not None:
+                    if output_vector_in_eye_frame[2] > 1:
+                        cv2.arrowedLine(frame, start_left, end_left, color=(0, 255, 0), thickness=1)
+                        cv2.arrowedLine(frame, start_right, end_right, color=(0, 255, 0), thickness=1)
 
-                            upper_left_corner = upper_left(output_vector_in_eye_frame[2])
-                            upper_right_corner = upper_right(output_vector_in_eye_frame[2])
-                            lower_left_corner = lower_right(output_vector_in_eye_frame[2])
-                            lower_right_corner = lower_left(output_vector_in_eye_frame[2])
-                            print(lower_right_corner)
+            if output_vector_in_eye_frame == [0, 0, 0]:
+                print("Eror nějaký")
+            else:
+                upper_left_corner = upper_left(output_vector_in_eye_frame)
+                upper_right_corner = upper_right(output_vector_in_eye_frame)
+                lower_left_corner = lower_right(output_vector_in_eye_frame)
+                lower_right_corner = lower_left(output_vector_in_eye_frame)
+                print(lower_right_corner)
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
 
         if cv2.waitKey(1) & 0xFF == ord('q'):  # "q" means close the detection
@@ -167,3 +168,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+threading1 = threading.Thread(target=background)
+threading1.daemon = True
+threading1.start()

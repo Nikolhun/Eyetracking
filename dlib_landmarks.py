@@ -78,6 +78,23 @@ def fill_frame(img, left_array, right_array):
     #cv2.imshow("eye_fill", eye_filling)
     return img
 
+def fill_frame_gui(img, array):
+    # not ideal yet
+    '''
+    Get eye from image
+    :param img: image in gray
+    :param _array: array of eye landmarks
+    :return: image in gray
+    '''
+    height, width = img.shape
+    mask = np.zeros((height, width), np.uint8)
+    cv2.polylines(mask, [array], True, 255, 2)
+    cv2.fillPoly(mask, [array], 255)
+    #eye_filling = cv2.bitwise_and(frame, frame, mask_inv, mask_inv)
+    eye_filling = cv2.bitwise_and(img, img, mask, mask)
+    #cv2.imshow("eye_fill", eye_filling)
+    return img
+
 
 def crop_eyes(eye_fill, eye_array):
     '''
