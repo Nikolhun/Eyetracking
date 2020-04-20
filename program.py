@@ -143,7 +143,7 @@ def main():
             if vector_mode == True:
                 vector_mode = False
                 print("Vector mode deactivated.")
-            elif vector_mode == False:
+            else:
                 vector_mode = True
                 print("Vector mode activated.")
         if vector_mode:
@@ -179,7 +179,7 @@ def main():
             if calibration_mode == True:
                 calibration_mode = False
                 print("Calibration mode deactivated.")
-            elif calibration_mode == False:
+            else:
                 calibration_mode = True
                 print("Calibration mode activated.")
             upper_left_corner = upper_right_corner = lower_left_corner = lower_right_corner = [0, 0]
@@ -196,6 +196,9 @@ def main():
                         lower_left_corner != [0, 0] and lower_right_corner != [0, 0]:
                     print("Data for calibration were taken.")
                     calibration_mode = False
+                    print("Calibration starts...")
+                    # tady interpolace
+                    print("Calibration done successfully.")
 
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
     cap.release()
