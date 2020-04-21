@@ -218,19 +218,18 @@ def main():
            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and send_calibration_data_state \
            and keyboard.is_pressed("enter"):
 
-            print("Data for calibration were taken.")
+            print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
+            #print("prvni prvek ll: ", lower_left_corner[0])
             print("Upper left corner: ", upper_left_corner)
             print("Upper right corner: ", upper_right_corner)
             print("Lower right corner: ", lower_right_corner)
             print("Calibration starts...")
 
-            u_interp, v_interp = interpolate(lower_left_corner, upper_left_corner, lower_right_corner, upper_right_corner)
+            u_interp, v_interp = interpolate(lower_left_corner, upper_left_corner,
+                                             lower_right_corner, upper_right_corner)
             print("Calibration done successfully.")
             send_calibration_data_state = False
-
-            print("u", u_interp)
-            print("v", v_interp)
 
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
     cap.release()

@@ -1,7 +1,7 @@
 import keyboard
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import interpolate
+from scipy.interpolate import griddata
 
 
 
@@ -85,8 +85,8 @@ def interpolate(lower_left_corner, upper_left_corner, lower_right_corner, upper_
     xx, yy = np.meshgrid(xx, yy)
 
     points = np.transpose(np.vstack((x, y)))
-    u_interp = interpolate.griddata(points, u, (xx, yy), method='cubic')  # interpolate u
-    v_interp = interpolate.griddata(points, v, (xx, yy), method='cubic')  # interpolate v
+    u_interp = griddata(points, u, (xx, yy), method='cubic')  # interpolate u
+    v_interp = griddata(points, v, (xx, yy), method='cubic')  # interpolate v
 
     plt.figure(2)
     plt.quiver(xx, yy, u_interp, v_interp)  # show interpolated vectors
