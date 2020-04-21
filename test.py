@@ -4,7 +4,7 @@ from dlib_landmarks import draw_point, eye_center_dlib, landmarks_array, fill_fr
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import detect_corneal_reflection
 from vector import find_vector
-from calibration import upper_left, upper_right, lower_left, lower_right, interpolate
+from calibration import upper_left, upper_right, lower_left, lower_right
 import keyboard
 
 print("Set threshold for left and right eye.")
@@ -47,7 +47,7 @@ def main():
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     left_center_pupil_in_eye_frame = [0, 0]
     right_center_pupil_in_eye_frame = [0, 0]
-    output_vector_in_eye_frame = [0, 0, 0, 0]
+    output_vector_in_eye_frame = [0, 0, 0]
     left_eye_crop = [0, 0]
     right_eye_crop = [0, 0]
     min_left = [0, 0]
@@ -59,7 +59,6 @@ def main():
     press_2 = False
     press_3 = False
     press_4 = False
-    press_detele = False
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
@@ -146,9 +145,12 @@ def main():
 # ---------------------------------- Show vector after pressing v --------------------------------------------------- #
 
         if keyboard.is_pressed("v"):  # "q" means close the detection
-            vector_mode = True
-            print("Vector mode activated.")
-
+            if vector_mode == True:
+                vector_mode = False
+                print("Vector mode deactivated.")
+            else:
+                vector_mode = True
+                print("Vector mode activated.")
         if vector_mode:
             # finding eye center
             left_center_eye, left_center_eye_in_eye_frame = eye_center_dlib(left_eye_crop, [min_left[0], min_left[1]])
@@ -164,10 +166,10 @@ def main():
             start_right = (right_center_eye[0], right_center_eye[1])
 
             # end of vector
-            end_left = (output_vector_in_eye_frame[0]*10 + left_center_eye[0],
-                        output_vector_in_eye_frame[1]*10 + left_center_eye[1])
-            end_right = (output_vector_in_eye_frame[0]*10 + right_center_eye[0],
-                     output_vector_in_eye_frame[1]*10 + right_center_eye[1])
+            end_left = (output_vector_in_eye_frame[0] + left_center_eye[0],
+                    output_vector_in_eye_frame[1] + left_center_eye[1])
+            end_right = (output_vector_in_eye_frame[0] + right_center_eye[0],
+                     output_vector_in_eye_frame[1] + right_center_eye[1])
 
             if end_left == [0, 0] or end_right == [0, 0]:
                 print("Pupil not detected. Try to adjust threshold better and press v again..")
@@ -177,60 +179,59 @@ def main():
                     cv2.arrowedLine(frame, start_right, end_right, color=(0, 255, 0), thickness=1)
 
 # ---------------------------------- Start calibration after pressing c --------------------------------------------- #
-        if keyboard.is_pressed("1") and not press_1:
-            press_1 = True
-            lower_left_corner = lower_left(output_vector_in_eye_frame)
-            print("Lower left corner saved.")
-            print('Look into upper left corner and press 2.')
 
-        if keyboard.is_pressed("2") and not press_2:
-            press_2 = True
+        #if keyboard.is_pressed("c"):  # "c" means start the calibration
+            #if calibration_mode == True:
+                #calibration_mode = False
+                #print("Calibration mode deactivated.")
+            #else:
+                #calibration_mode = True
+                #print("Calibration mode activated.")
+            #upper_left_corner = upper_right_corner = lower_left_corner = lower_right_corner = [0, 0]
+
+        if keyboard.is_pressed("1") and press_1 == False:
+            press_1 = True
             upper_left_corner = upper_left(output_vector_in_eye_frame)
             print("Upper left corner saved.")
-            print('Look into upper right corner and press 3.')
-
-        if keyboard.is_pressed("3") and not press_3:
+            print('Look into upper right corner and press 2.')
+        if keyboard.is_pressed("2") and press_2 == False:
+            press_2 = True
+            upper_right_corner = upper_right(output_vector_in_eye_frame)
+            print("Upper right corner saved.")
+            print('Look into lower right corner and press 3.')
+        if keyboard.is_pressed("3") and press_3 == False:
             press_3 = True
             lower_right_corner = lower_right(output_vector_in_eye_frame)
             print("Lower right corner saved.")
             print('Look into lower left corner and press 4.')
-
-        if keyboard.is_pressed("4") and not press_4:
+        if keyboard.is_pressed("4") and press_4 == False:
             press_4 = True
-            upper_right_corner = upper_right(output_vector_in_eye_frame)
-            print("Upper right corner saved.")
+            lower_left_corner = lower_left(output_vector_in_eye_frame)
+            print("Lower left corner saved.")
 
-        if keyboard.is_pressed("d") and not press_detele:
-            press_detele = True
-            vector_mode = False
-            print("Vector mode deactivated.")
-            print("Measured data from corners were deleted.")
+        if keyboard.is_pressed("d"):
+            print("Measured data from corners deleted.")
             press_1 = False
-            upper_left_corner = [0, 0, 0, 0]
+            upper_left_corner = [0, 0, 0]
             press_2 = False
-            upper_right_corner = [0, 0, 0, 0]
+            upper_right_corner = [0, 0, 0]
             press_3 = False
-            lower_left_corner = [0, 0, 0, 0]
+            lower_left_corner = [0, 0, 0]
             press_4 = False
-            lower_right_corner = [0, 0, 0, 0]
+            lower_right_corner = [0, 0, 0]
 
-        if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
-           lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and send_calibration_data_state \
-           and keyboard.is_pressed("enter"):
-
-            print("Data for calibration were taken.")
-            print("Lower left corner: ", lower_left_corner)
-            print("Upper left corner: ", upper_left_corner)
-            print("Upper right corner: ", upper_right_corner)
-            print("Lower right corner: ", lower_right_corner)
-            print("Calibration starts...")
-
-            u_interp, v_interp = interpolate(lower_left_corner, upper_left_corner, lower_right_corner, upper_right_corner)
-            print("Calibration done successfully.")
+        if upper_left_corner != [0, 0, 0] and upper_right_corner != [0, 0, 0] and \
+            lower_left_corner != [0, 0, 0] and lower_right_corner != [0, 0, 0] and send_calibration_data_state == True\
+                and keyboard.is_pressed("enter"):
             send_calibration_data_state = False
-
-            print("u", u_interp)
-            print("v", v_interp)
+            print("Data for calibration were taken.")
+            print("Calibration starts...")
+            print("upper left corner", upper_left_corner)
+            print("upper right corner", upper_right_corner)
+            print("lower left corner", lower_left_corner)
+            print("lower right corner", lower_right_corner)
+            # tady interpolace
+            print("Calibration done successfully.")
 
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
     cap.release()

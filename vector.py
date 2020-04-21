@@ -15,8 +15,21 @@ def find_vector(left_center_pupil, left_center_eye, right_center_pupil, right_ce
     r_x = right_center_pupil[0] - right_center_eye[0]  # right eye x
     r_y = right_center_pupil[1] - right_center_eye[1]   # right eye y
 
-    l_size = math.sqrt(l_x * l_x + l_y * l_y)  # size of left eye
-    r_size = math.sqrt(r_x * r_x + r_y * r_y)  # size of right eye
+    l_magnitude = math.sqrt(l_x * l_x + l_y * l_y)  # magnitude of left eye
+    r_magnitude = math.sqrt(r_x * r_x + r_y * r_y)  # magnitude of right eye
 
-    output_vector = [int((l_x + r_x)/2)*10, int((l_y + r_y)/2)*10, int((r_size + l_size)/2)]  # vector [x, y, size]
+    if l_y == 0:
+        l_y = 0.000001
+    if r_y == 0:
+        r_y = 0.000001
+
+    l_direction_radian = math.atan(l_x/l_y)  # direction of left eye
+    r_direction_radian = math.atan(r_x/r_y)  # direction of right eye
+
+    l_direction = (l_direction_radian * 180) / math.pi  # from radians to degrees for left eye
+    r_direction = (r_direction_radian * 180) / math.pi  # from radians to degrees for right eye
+
+    output_vector = [int((l_x + r_x)/2), int((l_y + r_y)/2), int((r_magnitude + l_magnitude)/2),
+                     int((r_direction + l_direction)/2)]  # vector [x, y, magnitude, direction]
     return output_vector
+
