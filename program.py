@@ -8,8 +8,8 @@ from calibration import upper_left, upper_right, lower_left, lower_right, interp
 import keyboard
 
 print("Set threshold for left and right eye.")
-print("Start and end vector mode by pressing v.")
-print('For starting calibration mode. Look into upper right corner and press 1.')
+print("Show vector for calibration by pressing v.")
+
 
 #######################################################################################################################
 # ------------------------------- Initiation part ------------------------------------------------------------------- #
@@ -148,6 +148,7 @@ def main():
         if keyboard.is_pressed("v"):  # "q" means close the detection
             vector_mode = True
             print("Vector mode activated.")
+            print('For starting calibration mode. Look into upper right corner and press 1.')
 
         if vector_mode:
             # finding eye center
@@ -199,12 +200,15 @@ def main():
             press_4 = True
             upper_right_corner = upper_right(output_vector_in_eye_frame)
             print("Upper right corner saved.")
+            print("Pres enter for saving measured data")
 
         if keyboard.is_pressed("d") and not press_detele:
             press_detele = True
             vector_mode = False
             print("Vector mode deactivated.")
             print("Measured data from corners were deleted.")
+            print("Ready to start new measurment.")
+            print("Look into upper right corner and press 1.")
             press_1 = False
             upper_left_corner = [0, 0, 0, 0]
             press_2 = False
@@ -213,6 +217,7 @@ def main():
             lower_left_corner = [0, 0, 0, 0]
             press_4 = False
             lower_right_corner = [0, 0, 0, 0]
+            send_calibration_data_state = True
 
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and send_calibration_data_state \
@@ -220,7 +225,6 @@ def main():
 
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
-            #print("prvni prvek ll: ", lower_left_corner[0])
             print("Upper left corner: ", upper_left_corner)
             print("Upper right corner: ", upper_right_corner)
             print("Lower right corner: ", lower_right_corner)

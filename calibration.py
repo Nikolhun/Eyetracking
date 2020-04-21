@@ -72,8 +72,8 @@ def interpolate(lower_left_corner, upper_left_corner, lower_right_corner, upper_
     :return:
     '''
 
-    x = [lower_left_corner[0], upper_left_corner[0], lower_right_corner[0], upper_right_corner[0]]
-    y = [lower_left_corner[1], upper_left_corner[1], lower_right_corner[1], upper_right_corner[1]]
+    x = [0, 0, 100, 100]
+    y = [0, 100, 0, 100]
     u = [lower_left_corner[2], upper_left_corner[2], lower_right_corner[2], upper_right_corner[2]]
     v = [lower_left_corner[3], upper_left_corner[3], lower_right_corner[3], upper_right_corner[3]]
 
