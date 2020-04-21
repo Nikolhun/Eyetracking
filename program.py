@@ -197,6 +197,10 @@ def main():
                     print("Data for calibration were taken.")
                     calibration_mode = False
                     print("Calibration starts...")
+                    print("upper left corner", upper_left_corner)
+                    print("upper right corner", upper_right_corner)
+                    print("lower left corner", lower_left_corner)
+                    print("lower right corner", lower_right_corner)
                     # tady interpolace
                     print("Calibration done successfully.")
 
