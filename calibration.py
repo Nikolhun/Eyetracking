@@ -4,7 +4,6 @@ import numpy as np
 from scipy.interpolate import griddata
 
 
-
 #######################################################################################################################
 # ---------------------------------- Functions ---------------------------------------------- #
 #######################################################################################################################
@@ -74,26 +73,26 @@ def upper_right(vector):
 #######################################################################################################################
 # ---------------------------------- Calibration -------------------------------------------------------------------- #
 #######################################################################################################################
-def interpolate(lower_left_corner, upper_left_corner, middle, lower_right_corner, upper_right_corner, size_of_interpolated_map):
+def interpolate(lower_left_corner, upper_left_corner, middle, lower_right_corner, upper_right_corner, screen_size):
     '''
     Interpolates vectors from measured corners. You need x, y, u and v of a vector.
     :param lower_left_corner: [x, y, u, v] of lower left corner
     :param upper_left_corner: [x, y, u, v] of upper left corner
     :param lower_right_corner: [x, y, u, v] of lower right corner
     :param upper_right_corner: [x, y, u, v] of upper right corner
-    :return:
+    :return: u and v interpolation
     '''
 
-    x = [0, 0, 50, 100, 100]
-    y = [0, 100, 50, 0, 100]
+    x = [0, 0, screen_size[0]/2, screen_size[0], screen_size[0]]
+    y = [0, screen_size[1], screen_size[1]/2, 0, screen_size[1]]
     u = [lower_left_corner[2], upper_left_corner[2], middle[2], lower_right_corner[2], upper_right_corner[2]]
     v = [lower_left_corner[3], upper_left_corner[3], middle[3], lower_right_corner[3], upper_right_corner[3]]
 
     plt.figure(1)
     plt.quiver(x, y, u, v)  # show measured vectors
 
-    xx = np.linspace(min(x), max(x), size_of_interpolated_map)  # new x ax for interpolated data
-    yy = np.linspace(min(y), max(y), size_of_interpolated_map)  # new y ax for interpolated data
+    xx = np.linspace(min(x), max(x), screen_size[0])  # new x ax for interpolated data
+    yy = np.linspace(min(y), max(y), screen_size[1])  # new y ax for interpolated data
     xx, yy = np.meshgrid(xx, yy)
 
     points = np.transpose(np.vstack((x, y)))
@@ -105,3 +104,27 @@ def interpolate(lower_left_corner, upper_left_corner, middle, lower_right_corner
     plt.show()
 
     return u_interp, v_interp
+
+def find_closest_in_array(array, value):
+    '''
+    Finds closest number and its coordinates in array
+    :param array: numpy array with at least two rows
+    :param value: value, that is rearched
+    :return: [number, row, column]
+    '''
+    ro = -1  # not 0 because len array returns from 1 not from 0
+    closest_from_every_row = []
+    closest_from_every_row_row = []
+    closest_from_every_row_column = []
+    for i in range(0, len(array)):
+        ro = ro + 1
+        array_line = np.asarray(array[i])
+        idx = (np.abs(array_line - value)).argmin()  # get position
+        closest_from_every_row.append(array_line[idx])  # closest numbers from row
+        closest_from_every_row_row.append(ro)  # coordinate row
+        closest_from_every_row_column.append(idx)  # coordinate column
+
+    closest_from_every_row = np.asarray(closest_from_every_row)
+    idx_from_every_row = (np.abs(closest_from_every_row - value)).argmin()  # get position prom closest numbers in row
+    return closest_from_every_row[idx_from_every_row], closest_from_every_row_row[idx_from_every_row],\
+           closest_from_every_row_column[idx_from_every_row]

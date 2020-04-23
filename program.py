@@ -1,12 +1,16 @@
 import cv2
 import dlib
+import ctypes
+import keyboard
+import numpy as np
 from dlib_landmarks import draw_point, eye_center_dlib, landmarks_array, fill_frame, crop_eyes
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import detect_corneal_reflection
 from vector import find_vector
-from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, interpolate
-import keyboard
-import numpy as np
+from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, interpolate,\
+    find_closest_in_array
+from eyetracking import hide_taskbar, unhide_taskbar, show_eyetracking
+
 
 print("Set threshold for left and right eye.")
 print("Show vector for calibration by pressing v.")
@@ -46,15 +50,33 @@ def main():
     cv2.namedWindow('Dlib Landmarks')  # Dlib landmark left eye
     cv2.createTrackbar('Right', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
-    left_center_pupil_in_eye_frame = right_center_pupil_in_eye_frame = [0, 0]
+
+    left_center_pupil_in_eye_frame = [0, 0]
+    right_center_pupil_in_eye_frame = [0, 0]
     output_vector_in_eye_frame = [0, 0, 0, 0]
-    left_eye_crop = right_eye_crop = min_left = min_right = [0, 0]
+    left_eye_crop = [0, 0]
+    right_eye_crop = [0, 0]
+    min_left = [0, 0]
+    min_right = [0, 0]
     vector_mode = False
+    start_mode = False
     send_calibration_data_state = True
-    upper_left_corner = upper_right_corner = middle = lower_left_corner = lower_right_corner = [0, 0, 0]
+    upper_left_corner = [0, 0, 0]
+    upper_right_corner = [0, 0, 0]
+    middle = [0, 0, 0]
+    lower_left_corner = [0, 0, 0]
+    lower_right_corner = [0, 0, 0]
     size_of_interpolated_map = 100
-    u_interp = v_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
-    press_1 = press_2 = press_3 = press_4 = press_5 = press_detele = press_start = False
+    u_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
+    v_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
+    press_v = False
+    press_1 = False
+    press_2 = False
+    press_3 = False
+    press_4 = False
+    press_5 = False
+    press_detele = False
+    press_start = False
 
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
@@ -134,15 +156,13 @@ def main():
                             cv2.circle(frame, (right_center_pupil[0], right_center_pupil[1]), 1,
                                        (255, 0, 0), 2)
 
-# ---------------------------------- Quit program after pressing q -------------------------------------------------- #
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):  # "q" means close the detection
-            break
 
 # ---------------------------------- Show vector after pressing v --------------------------------------------------- #
 
-        if keyboard.is_pressed("v"):  # "q" means close the detection
+        if keyboard.is_pressed("v") and not press_v:  # "q" means close the detection
             vector_mode = True
+            press_v = True
             print("Vector mode activated.")
             print('For starting calibration mode. Look into lower right corner and press 1.')
 
@@ -202,7 +222,7 @@ def main():
             press_5 = True
             upper_right_corner = upper_right(output_vector_in_eye_frame)
             print("Upper right corner saved.")
-            print("Pres enter for saving measured data")
+            print("Pres enter for saving measured data or d for deleting measured data")
 
         if keyboard.is_pressed("d") and not press_detele:
             press_detele = True
@@ -222,6 +242,7 @@ def main():
             press_5 = False
             middle = [0, 0, 0, 0]
             send_calibration_data_state = True
+            press_start = False
 
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
@@ -235,28 +256,48 @@ def main():
             print("Lower right corner: ", lower_right_corner)
             print("Calibration starts...")
 
+            user32 = ctypes.windll.user32
+            screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+
             u_interp, v_interp = interpolate(lower_left_corner, upper_left_corner, middle,
-                                             lower_right_corner, upper_right_corner, size_of_interpolated_map)
+                                             lower_right_corner, upper_right_corner, screensize)
             print("Calibration done successfully.")
             send_calibration_data_state = False
-
-        if keyboard.is_pressed("s") and not press_start and \
-                v_interp == np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8) and \
-                u_interp == np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8):
             press_start = True
-            #get vector and find out where it is, show white screen and start draing lines
-            #output_vector_in_eye_frame[2] a output_vector_in_eye_frame[3]
+            print("For starting eyetracker press e. For stopping eyetracker press s")
+
+        if keyboard.is_pressed("e") and press_start:
+            start_mode = False
             print("Eyetracker starts...")
-            #tady eyetracker
-            for i in range(0,u_interp.size[0]):
-                for y in range(0, u_interp.size[1]):
-                    if output_vector_in_eye_frame[2] == u_interp[i,y]:
-                        print("x")
-                        #dodělat
+
+        if start_mode:
+            u_interp_closest, u_interp_closest_row,\
+            u_interp_closest_column = find_closest_in_array(u_interp, output_vector_in_eye_frame[2])
+            v_interp_closest, v_interp_closest_row,\
+            v_interp_closest_column = find_closest_in_array(v_interp, output_vector_in_eye_frame[3])
+
+            # print("u", u_interp_closest_row, u_interp_closest_column)
+            # print("v", v_interp_closest_row, v_interp_closest_column)
+            show_eyetracking(u_interp_closest_row, u_interp_closest_column, "u tracking", screensize)  # u
+            hide_taskbar()
+
+
+        if keyboard.is_pressed('s'):
+            cv2.waitKey(1)
+            unhide_taskbar()
+            cv2.destroyWindow("u tracking")
+            press_start = False
+            start_mode = False
+            print("Eyetracker stops...")
 
 
 
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
+
+
+# ---------------------------------- Quit program after pressing q -------------------------------------------------- #
+        if cv2.waitKey(1) & 0xFF == ord('q'):  # "q" means close the program
+            break
     cap.release()
     cv2.destroyAllWindows()
 
