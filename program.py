@@ -60,7 +60,7 @@ def main():
     min_right = [0, 0]
     vector_mode = False
     start_mode = False
-    send_calibration_data_state = True
+    send_calibration_data_state = False
     upper_left_corner = [0, 0, 0]
     upper_right_corner = [0, 0, 0]
     middle = [0, 0, 0]
@@ -76,7 +76,8 @@ def main():
     press_4 = False
     press_5 = False
     press_detele = False
-    press_start = False
+    press_s = False
+    press_e = False
 
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
@@ -220,6 +221,7 @@ def main():
 
         if keyboard.is_pressed("5") and not press_5:
             press_5 = True
+            send_calibration_data_state = True
             upper_right_corner = upper_right(output_vector_in_eye_frame)
             print("Upper right corner saved.")
             print("Pres enter for saving measured data or d for deleting measured data")
@@ -230,7 +232,7 @@ def main():
             print("Vector mode deactivated.")
             print("Measured data from corners were deleted.")
             print("Ready to start new measurment.")
-            print("Look into upper right corner and press 1.")
+            print("Press v to show vector")
             press_1 = False
             upper_left_corner = [0, 0, 0, 0]
             press_2 = False
@@ -242,7 +244,8 @@ def main():
             press_5 = False
             middle = [0, 0, 0, 0]
             send_calibration_data_state = True
-            press_start = False
+            press_s = False
+            press_e = False
 
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
@@ -254,7 +257,7 @@ def main():
             print("Middle: ", middle)
             print("Upper right corner: ", upper_right_corner)
             print("Lower right corner: ", lower_right_corner)
-            print("Calibration starts...")
+            print("Wait please. Calibration in progress...")
 
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
@@ -263,11 +266,12 @@ def main():
                                              lower_right_corner, upper_right_corner, screensize)
             print("Calibration done successfully.")
             send_calibration_data_state = False
-            press_start = True
-            print("For starting eyetracker press e. For stopping eyetracker press s")
+            press_e = False
+            print("For starting eyetracker press e. For stopping eyetracker press s.")
 
-        if keyboard.is_pressed("e") and press_start:
-            start_mode = False
+        if keyboard.is_pressed("e") and not press_e:
+            press_e = True
+            start_mode = True
             print("Eyetracker starts...")
 
         if start_mode:
@@ -278,22 +282,22 @@ def main():
 
             # print("u", u_interp_closest_row, u_interp_closest_column)
             # print("v", v_interp_closest_row, v_interp_closest_column)
+
+            user32 = ctypes.windll.user32
+            screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+
             show_eyetracking(u_interp_closest_row, u_interp_closest_column, "u tracking", screensize)  # u
             hide_taskbar()
 
-
-        if keyboard.is_pressed('s'):
+        if keyboard.is_pressed('s') and not press_s:
+            press_s = True
+            start_mode = False
             cv2.waitKey(1)
             unhide_taskbar()
             cv2.destroyWindow("u tracking")
-            press_start = False
-            start_mode = False
             print("Eyetracker stops...")
 
-
-
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
-
 
 # ---------------------------------- Quit program after pressing q -------------------------------------------------- #
         if cv2.waitKey(1) & 0xFF == ord('q'):  # "q" means close the program

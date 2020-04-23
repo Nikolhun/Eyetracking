@@ -34,6 +34,8 @@ def unhide_taskbar():
 def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize):
     mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255
     circle_size = 4
+    #cv2.startWindowThread(window_name)
     cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
     cv2.circle(mask, (coordinate_x, coordinate_y), circle_size, (0, 0, 255), -1)  # lower left
     cv2.imshow(window_name, mask)
+    cv2.waitKey(100)
