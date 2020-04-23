@@ -4,8 +4,9 @@ from dlib_landmarks import draw_point, eye_center_dlib, landmarks_array, fill_fr
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import detect_corneal_reflection
 from vector import find_vector
-from calibration import upper_left, upper_right, lower_left, lower_right, interpolate
+from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, interpolate
 import keyboard
+import numpy as np
 
 print("Set threshold for left and right eye.")
 print("Show vector for calibration by pressing v.")
@@ -45,21 +46,16 @@ def main():
     cv2.namedWindow('Dlib Landmarks')  # Dlib landmark left eye
     cv2.createTrackbar('Right', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
-    left_center_pupil_in_eye_frame = [0, 0]
-    right_center_pupil_in_eye_frame = [0, 0]
+    left_center_pupil_in_eye_frame = right_center_pupil_in_eye_frame = [0, 0]
     output_vector_in_eye_frame = [0, 0, 0, 0]
-    left_eye_crop = [0, 0]
-    right_eye_crop = [0, 0]
-    min_left = [0, 0]
-    min_right = [0, 0]
+    left_eye_crop = right_eye_crop = min_left = min_right = [0, 0]
     vector_mode = False
     send_calibration_data_state = True
-    upper_left_corner = upper_right_corner = lower_left_corner = lower_right_corner = [0, 0, 0]
-    press_1 = False
-    press_2 = False
-    press_3 = False
-    press_4 = False
-    press_detele = False
+    upper_left_corner = upper_right_corner = middle = lower_left_corner = lower_right_corner = [0, 0, 0]
+    size_of_interpolated_map = 100
+    u_interp = v_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
+    press_1 = press_2 = press_3 = press_4 = press_5 = press_detele = press_start = False
+
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
@@ -148,7 +144,7 @@ def main():
         if keyboard.is_pressed("v"):  # "q" means close the detection
             vector_mode = True
             print("Vector mode activated.")
-            print('For starting calibration mode. Look into upper right corner and press 1.')
+            print('For starting calibration mode. Look into lower right corner and press 1.')
 
         if vector_mode:
             # finding eye center
@@ -188,16 +184,22 @@ def main():
             press_2 = True
             upper_left_corner = upper_left(output_vector_in_eye_frame)
             print("Upper left corner saved.")
-            print('Look into upper right corner and press 3.')
+            print('Look into middle of the screen and press 3.')
 
         if keyboard.is_pressed("3") and not press_3:
             press_3 = True
-            lower_right_corner = lower_right(output_vector_in_eye_frame)
-            print("Lower right corner saved.")
-            print('Look into lower left corner and press 4.')
+            middle = middle_screen(output_vector_in_eye_frame)
+            print("Middle saved.")
+            print('Look into lower right corner and press 4.')
 
         if keyboard.is_pressed("4") and not press_4:
             press_4 = True
+            lower_right_corner = lower_right(output_vector_in_eye_frame)
+            print("Lower right corner saved.")
+            print('Look into upper left corner and press 5.')
+
+        if keyboard.is_pressed("5") and not press_5:
+            press_5 = True
             upper_right_corner = upper_right(output_vector_in_eye_frame)
             print("Upper right corner saved.")
             print("Pres enter for saving measured data")
@@ -217,23 +219,42 @@ def main():
             lower_left_corner = [0, 0, 0, 0]
             press_4 = False
             lower_right_corner = [0, 0, 0, 0]
+            press_5 = False
+            middle = [0, 0, 0, 0]
             send_calibration_data_state = True
 
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
-           lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and send_calibration_data_state \
-           and keyboard.is_pressed("enter"):
+           lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
+            send_calibration_data_state and keyboard.is_pressed("enter"):
 
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
             print("Upper left corner: ", upper_left_corner)
+            print("Middle: ", middle)
             print("Upper right corner: ", upper_right_corner)
             print("Lower right corner: ", lower_right_corner)
             print("Calibration starts...")
 
-            u_interp, v_interp = interpolate(lower_left_corner, upper_left_corner,
-                                             lower_right_corner, upper_right_corner)
+            u_interp, v_interp = interpolate(lower_left_corner, upper_left_corner, middle,
+                                             lower_right_corner, upper_right_corner, size_of_interpolated_map)
             print("Calibration done successfully.")
             send_calibration_data_state = False
+
+        if keyboard.is_pressed("s") and not press_start and \
+                v_interp == np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8) and \
+                u_interp == np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8):
+            press_start = True
+            #get vector and find out where it is, show white screen and start draing lines
+            #output_vector_in_eye_frame[2] a output_vector_in_eye_frame[3]
+            print("Eyetracker starts...")
+            #tady eyetracker
+            for i in range(0,u_interp.size[0]):
+                for y in range(0, u_interp.size[1]):
+                    if output_vector_in_eye_frame[2] == u_interp[i,y]:
+                        print("x")
+                        #dodělat
+
+
 
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection
     cap.release()

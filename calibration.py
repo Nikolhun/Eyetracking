@@ -33,13 +33,25 @@ def upper_left(vector):
     return upper_left_corner
 
 
+def middle_screen(vector):
+    # cv2.circle(mask, (screensize[1] - circle_size, screensize[0] - circle_size), circle_size, (0, 0, 255), -1)  # lower right
+    # print('Look into lower right corner and press ENTER.')
+    middle_state = False
+    middle = [0, 0, 0]
+    while not middle_state:
+        if keyboard.is_pressed("3"):
+            middle = vector
+            middle_state = True
+            # cv2.circle(mask, (screensize[1] - circle_size, screensize[0] - circle_size), circle_size, (255, 255, 255), -1)  # hide circle
+    return middle
+
 def lower_right(vector):
     #cv2.circle(mask, (screensize[1] - circle_size, screensize[0] - circle_size), circle_size, (0, 0, 255), -1)  # lower right
     #print('Look into lower right corner and press ENTER.')
     lower_right_state = False
     lower_right_corner = [0, 0, 0]
     while not lower_right_state:
-        if keyboard.is_pressed("3"):
+        if keyboard.is_pressed("4"):
             lower_right_corner = vector
             lower_right_state = True
             # cv2.circle(mask, (screensize[1] - circle_size, screensize[0] - circle_size), circle_size, (255, 255, 255), -1)  # hide circle
@@ -52,7 +64,7 @@ def upper_right(vector):
     upper_right_state = False
     upper_right_corner = [0, 0, 0]
     while not upper_right_state:
-        if keyboard.is_pressed("4"):
+        if keyboard.is_pressed("5"):
             upper_right_corner = vector
             upper_right_state = True
             # cv2.circle(mask, (screensize[1] - circle_size, circle_size), circle_size, (255, 255, 255), -1)  # hide circle
@@ -62,7 +74,7 @@ def upper_right(vector):
 #######################################################################################################################
 # ---------------------------------- Calibration -------------------------------------------------------------------- #
 #######################################################################################################################
-def interpolate(lower_left_corner, upper_left_corner, lower_right_corner, upper_right_corner):
+def interpolate(lower_left_corner, upper_left_corner, middle, lower_right_corner, upper_right_corner, size_of_interpolated_map):
     '''
     Interpolates vectors from measured corners. You need x, y, u and v of a vector.
     :param lower_left_corner: [x, y, u, v] of lower left corner
@@ -72,16 +84,16 @@ def interpolate(lower_left_corner, upper_left_corner, lower_right_corner, upper_
     :return:
     '''
 
-    x = [0, 0, 100, 100]
-    y = [0, 100, 0, 100]
-    u = [lower_left_corner[2], upper_left_corner[2], lower_right_corner[2], upper_right_corner[2]]
-    v = [lower_left_corner[3], upper_left_corner[3], lower_right_corner[3], upper_right_corner[3]]
+    x = [0, 0, 50, 100, 100]
+    y = [0, 100, 50, 0, 100]
+    u = [lower_left_corner[2], upper_left_corner[2], middle[2], lower_right_corner[2], upper_right_corner[2]]
+    v = [lower_left_corner[3], upper_left_corner[3], middle[3], lower_right_corner[3], upper_right_corner[3]]
 
     plt.figure(1)
     plt.quiver(x, y, u, v)  # show measured vectors
 
-    xx = np.linspace(min(x), max(x), 20)  # new x ax for interpolated data
-    yy = np.linspace(min(y), max(y), 20)  # new y ax for interpolated data
+    xx = np.linspace(min(x), max(x), size_of_interpolated_map)  # new x ax for interpolated data
+    yy = np.linspace(min(y), max(y), size_of_interpolated_map)  # new y ax for interpolated data
     xx, yy = np.meshgrid(xx, yy)
 
     points = np.transpose(np.vstack((x, y)))
@@ -93,8 +105,3 @@ def interpolate(lower_left_corner, upper_left_corner, lower_right_corner, upper_
     plt.show()
 
     return u_interp, v_interp
-
-#ll = [-14, -1, 15, 85]
-#ul = [-15, -4, 16, 74]
-#lr = [5, 1, 6, -24]
-#ur = [6, -6, 9, -45]
