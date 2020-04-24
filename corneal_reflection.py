@@ -32,8 +32,7 @@ def detect_corneal_reflection(img, threshold_from_trackbar):
                 elif y == 0 and i != 0:
                     l[i, y] = l[i - 1, y]
                 else:
-                    #l[i, y] = l[i - 1, y]
-                    l[i, y] = 0
+                    l[i, y] = l[i - 1, y]
     lab = cv2.merge([l, a, b])
     bgr = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
     gray_frame = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)

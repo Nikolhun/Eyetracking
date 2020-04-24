@@ -2,6 +2,7 @@ import keyboard
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import griddata
+import math
 
 
 #######################################################################################################################
@@ -78,6 +79,7 @@ def interpolate(lower_left_corner, upper_left_corner, middle, lower_right_corner
     Interpolates vectors from measured corners. You need x, y, u and v of a vector.
     :param lower_left_corner: [x, y, u, v] of lower left corner
     :param upper_left_corner: [x, y, u, v] of upper left corner
+    :param middle: [x, y, u, v] of middle
     :param lower_right_corner: [x, y, u, v] of lower right corner
     :param upper_right_corner: [x, y, u, v] of upper right corner
     :return: u and v interpolation
@@ -87,6 +89,13 @@ def interpolate(lower_left_corner, upper_left_corner, middle, lower_right_corner
     y = [0, screen_size[1], screen_size[1]/2, 0, screen_size[1]]
     u = [lower_left_corner[2], upper_left_corner[2], middle[2], lower_right_corner[2], upper_right_corner[2]]
     v = [lower_left_corner[3], upper_left_corner[3], middle[3], lower_right_corner[3], upper_right_corner[3]]
+
+    ll = math.sqrt(lower_left_corner[2] * lower_left_corner[2] + lower_left_corner[3] * lower_left_corner[3])
+    up = math.sqrt(upper_left_corner[2] * upper_left_corner[2] + upper_left_corner[3] * upper_left_corner[3])
+    m = math.sqrt(middle[2] * middle[2] + middle[3] * middle[3])
+    lr = math.sqrt(lower_right_corner[2] * lower_right_corner[2] + lower_right_corner[3] * lower_right_corner[3])
+    ur = math.sqrt(upper_right_corner[2] * upper_right_corner[2] + upper_right_corner[3] * upper_right_corner[3])
+    uv = [ll, up, m, lr, ur]
 
     plt.figure(1)
     plt.quiver(x, y, u, v)  # show measured vectors
@@ -98,12 +107,25 @@ def interpolate(lower_left_corner, upper_left_corner, middle, lower_right_corner
     points = np.transpose(np.vstack((x, y)))
     u_interp = griddata(points, u, (xx, yy), method='cubic')  # interpolate u
     v_interp = griddata(points, v, (xx, yy), method='cubic')  # interpolate v
+    uv_interp = griddata(points, uv, (xx, yy), method='cubic')  # interpolate u
 
     plt.figure(2)
     plt.quiver(xx, yy, u_interp, v_interp)  # show interpolated vectors
     plt.show()
 
-    return u_interp, v_interp
+    plt.figure(3)
+    plt.quiver(xx, yy, uv_interp, uv_interp)  # show interpolated vectors
+    plt.show()
+
+    return u_interp, v_interp, uv_interp
+
+
+def uv_from_vector(vector):
+    u = vector[2]
+    v = vector[3]
+    uv = math.sqrt(u * u + v * v)
+    return uv
+
 
 def find_closest_in_array(array, value):
     '''

@@ -48,8 +48,8 @@ def preprocessing(img, threshold):
     :return: preprocessed_image, threshold
     '''
     _, img_binary = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)  # gray to binary image with threshold
-    img_erode = cv2.erode(img_binary, None, iterations=2)  # erode picture
-    img_dilate = cv2.dilate(img_erode, None, iterations=4)  # dilate picture
+    img_erode = cv2.erode(img_binary, None, iterations=1)  # erode picture
+    img_dilate = cv2.dilate(img_erode, None, iterations=1)  # dilate picture
     img_open = cv2.morphologyEx(img_dilate, cv2.MORPH_OPEN, None)  # morphology opening
     preprocessed_img = cv2.morphologyEx(img_open, cv2.MORPH_CLOSE, None)  # morphology closing
 
