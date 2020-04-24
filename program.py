@@ -262,11 +262,8 @@ def main():
 
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-            #print("screensize", screensize)
             u_interp, v_interp, uv_interp = interpolate(lower_left_corner, upper_left_corner, middle,
                                              lower_right_corner, upper_right_corner, screensize)
-            #print("stred u: hodnota", u_interp[432, 768], " na souřadnicích [432, 768]")
-            #print("stred v: hodnota", v_interp[432, 768], " na souřadnicích [432, 768]")
             print("Calibration done successfully.")
             send_calibration_data_state = False
             press_e = False
@@ -286,9 +283,6 @@ def main():
             uv_output_vector_in_eye_frame = uv_from_vector(output_vector_in_eye_frame)
             uv_interp_closest, uv_interp_closest_row, \
             uv_interp_closest_column = find_closest_in_array(uv_interp, uv_output_vector_in_eye_frame)
-
-            #print("u", u_interp_closest, u_interp_closest_row, u_interp_closest_column)
-            #print("v", v_interp_closest, v_interp_closest_row, v_interp_closest_column)
 
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
