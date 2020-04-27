@@ -1,45 +1,39 @@
-import cv2
-import ctypes
 import numpy as np
-from ctypes import wintypes
 
-def hide_taskbar():
-    user32 = ctypes.WinDLL("user32")
-    SW_HIDE = 0
-    user32.FindWindowW.restype = wintypes.HWND
-    user32.FindWindowW.argtypes = (
-        wintypes.LPCWSTR,  # lpClassName
-        wintypes.LPCWSTR)  # lpWindowName
-    user32.ShowWindow.argtypes = (
-        wintypes.HWND,  # hWnd
-        ctypes.c_int)  # nCmdShow
-    hWnd = user32.FindWindowW(u"Shell_traywnd", None)
-    user32.ShowWindow(hWnd, SW_HIDE)
+def find_closest_in_array(array, value):
+    '''
+    Finds closest number and its coordinates in array
+    :param array: numpy array with at least two rows
+    :param value: value, that is rearched
+    :return: [number, row, column]
+    '''
+    ro = -1  # not 0 because len array returns from 1 not from 0
+    closest_from_every_row = []
+    closest_from_every_row_row = []
+    closest_from_every_row_column = []
+    for i in range(0, len(array)):
+        ro = ro + 1
+        array_line = np.asarray(array[i])
+        idx = (np.abs(array_line - value)).argmin()  # get position
+        closest_from_every_row.append(array_line[idx])  # closest numbers from row
+        closest_from_every_row_row.append(ro)  # coordinate row
+        closest_from_every_row_column.append(idx)  # coordinate column
+
+    closest_from_every_row = np.asarray(closest_from_every_row)
+    idx_from_every_row = (np.abs(closest_from_every_row - value)).argmin()  # get position prom closest numbers in row
+
+    return closest_from_every_row[idx_from_every_row], closest_from_every_row_row[idx_from_every_row],\
+           closest_from_every_row_column[idx_from_every_row]
 
 
-def unhide_taskbar():
-    user32 = ctypes.WinDLL("user32")
-    SW_SHOW = 5
-    user32.FindWindowW.restype = wintypes.HWND
-    user32.FindWindowW.argtypes = (
-        wintypes.LPCWSTR,  # lpClassName
-        wintypes.LPCWSTR)  # lpWindowName
-    user32.ShowWindow.argtypes = (
-        wintypes.HWND,  # hWnd
-        ctypes.c_int)  # nCmdShow
-    hWnd = user32.FindWindowW(u"Shell_traywnd", None)
-    user32.ShowWindow(hWnd, SW_SHOW)
+array = np.zeros((20, 20), np.uint8)
+array[1, 1] = 100
+array[2, 1] = 50
+array[10, 5] = 54
+array[19, 0] = 4
+array[19, 4] = 4
+array[5, 10] = 100
 
-unhide_taskbar()
-def show_eyetracking(coordinate_x, coordinate_y):
-    user32 = ctypes.windll.user32
-    screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-    mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255
-    circle_size = 4
-    cv2.namedWindow("calibration", cv2.WND_PROP_FULLSCREEN)
-    cv2.circle(mask, (coordinate_y, coordinate_x), circle_size, (0, 0, 255), -1)  # lower left
-    cv2.imshow("calibration", mask)
-    hide_taskbar()
-    cv2.waitKey(10000)
-    unhide_taskbar()
-    cv2.destroyWindow("calibration")
+number, row, column = find_closest_in_array(array, 51)
+print(number, row, column)
+

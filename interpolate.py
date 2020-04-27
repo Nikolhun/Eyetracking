@@ -1,44 +1,51 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import interpolate
+import math
+from scipy.interpolate import griddata
 
 
-def interpolate(lower_left_corner, upper_left_corner, lower_right_corner, upper_right_corner):
+def interpolation(lower_left_corner, upper_left_corner, middle, lower_right_corner, upper_right_corner, screen_size):
  '''
  Interpolates vectors from measured corners. You need x, y, u and v of a vector.
  :param lower_left_corner: [x, y, u, v] of lower left corner
  :param upper_left_corner: [x, y, u, v] of upper left corner
+ :param middle: [x, y, u, v] of middle
  :param lower_right_corner: [x, y, u, v] of lower right corner
  :param upper_right_corner: [x, y, u, v] of upper right corner
+ :param screen_size: screensize in [x, y]
  :return:
  '''
 
- x = [lower_left_corner[0], upper_left_corner[0], lower_right_corner[0], upper_right_corner[0]]
- y = [lower_left_corner[1], upper_left_corner[1], lower_right_corner[1], upper_right_corner[1]]
- u = [lower_left_corner[2], upper_left_corner[2], lower_right_corner[2], upper_right_corner[2]]
- v = [lower_left_corner[3], upper_left_corner[3], lower_right_corner[3], upper_right_corner[3]]
+ x = [0, 0, int(screen_size[0] / 2), screen_size[0], screen_size[0]]
+ y = [0, screen_size[1], int(screen_size[1] / 2), 0, screen_size[1]]
+ u = [lower_left_corner[2], upper_left_corner[2], middle[2], lower_right_corner[2], upper_right_corner[2]]
+ v = [lower_left_corner[3], upper_left_corner[3], middle[3], lower_right_corner[3], upper_right_corner[3]]
+
+ ll = math.sqrt(lower_left_corner[2] * lower_left_corner[2] + lower_left_corner[3] * lower_left_corner[3])
+ up = math.sqrt(upper_left_corner[2] * upper_left_corner[2] + upper_left_corner[3] * upper_left_corner[3])
+ m = math.sqrt(middle[2] * middle[2] + middle[3] * middle[3])
+ lr = math.sqrt(lower_right_corner[2] * lower_right_corner[2] + lower_right_corner[3] * lower_right_corner[3])
+ ur = math.sqrt(upper_right_corner[2] * upper_right_corner[2] + upper_right_corner[3] * upper_right_corner[3])
+ uv = [ll, up, m, lr, ur]
 
  plt.figure(1)
  plt.quiver(x, y, u, v)  # show measured vectors
 
- xx = np.linspace(min(x), max(x), 20)  # new x ax for interpolated data
- yy = np.linspace(min(y), max(y), 20)  # new y ax for interpolated data
+ xx = np.linspace(min(x), max(x), 20)  # new x ax for interpolated data screen_size[0]
+ yy = np.linspace(min(y), max(y), 20)  # new y ax for interpolated data screen_size[1]
  xx, yy = np.meshgrid(xx, yy)
 
  points = np.transpose(np.vstack((x, y)))
- u_interp = interpolate.griddata(points, u, (xx, yy), method='cubic')  # interpolate u
- v_interp = interpolate.griddata(points, v, (xx, yy), method='cubic')  # interpolate v
+ u_interp = griddata(points, u, (xx, yy), method='cubic')  # interpolate u
+ v_interp = griddata(points, v, (xx, yy), method='cubic')  # interpolate v
+ uv_interp = griddata(points, uv, (xx, yy), method='cubic')  # interpolate u
 
  plt.figure(2)
  plt.quiver(xx, yy, u_interp, v_interp)  # show interpolated vectors
  plt.show()
 
- print("u", u_interp)
- print("v", v_interp)
+ # plt.figure(3)
+ # plt.quiver(xx, yy, uv_interp, uv_interp)  # show interpolated vectors
+ # plt.show()
 
- return u_interp, v_interp
-
-#ll = [-14, -1, 15, 85]
-#ul = [-15, -4, 16, 74]
-#lr = [5, 1, 6, -24]
-#ur = [6, -6, 9, -45]
+ return u_interp, v_interp, uv_interp

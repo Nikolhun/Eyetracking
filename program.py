@@ -7,9 +7,9 @@ from dlib_landmarks import draw_point, eye_center_dlib, landmarks_array, fill_fr
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import detect_corneal_reflection
 from vector import find_vector
-from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, interpolate,\
-    find_closest_in_array, uv_from_vector
-from eyetracking import hide_taskbar, unhide_taskbar, show_eyetracking
+from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right
+from interpolate import interpolation
+from eyetracking import find_closest_in_array, uv_from_vector, hide_taskbar, unhide_taskbar, show_eyetracking
 
 
 print("Set threshold for left and right eye.")
@@ -69,6 +69,7 @@ def main():
     size_of_interpolated_map = 100
     u_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
     v_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
+    uv_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
     press_v = False
     press_1 = False
     press_2 = True
@@ -174,6 +175,7 @@ def main():
             output_vector_in_eye_frame = find_vector(left_center_pupil_in_eye_frame, left_center_eye_in_eye_frame,
                                                      right_center_pupil_in_eye_frame, right_center_eye_in_eye_frame)
 
+
             # start of vector
             start_left = (left_center_eye[0], left_center_eye[1])
             start_right = (right_center_eye[0], right_center_eye[1])
@@ -256,14 +258,15 @@ def main():
             print("Lower left corner: ", lower_left_corner)
             print("Upper left corner: ", upper_left_corner)
             print("Middle: ", middle)
-            print("Upper right corner: ", upper_right_corner)
             print("Lower right corner: ", lower_right_corner)
+            print("Upper right corner: ", upper_right_corner)
             print("Wait please. Calibration in progress...")
 
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-            u_interp, v_interp, uv_interp = interpolate(lower_left_corner, upper_left_corner, middle,
+            u_interp, v_interp, uv_interp = interpolation(lower_left_corner, upper_left_corner, middle,
                                              lower_right_corner, upper_right_corner, screensize)
+
             print("Calibration done successfully.")
             send_calibration_data_state = False
             press_e = False
@@ -275,6 +278,9 @@ def main():
             print("Eyetracker starts...")
 
         if start_mode:
+
+            ########### upravit funkci find closest in array #############
+
             u_interp_closest, u_interp_closest_row,\
             u_interp_closest_column = find_closest_in_array(u_interp, output_vector_in_eye_frame[2])
             v_interp_closest, v_interp_closest_row,\
@@ -287,9 +293,12 @@ def main():
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
             hide_taskbar()
-            show_eyetracking(u_interp_closest_row, u_interp_closest_column, "u tracking", screensize)  # u
-            show_eyetracking(v_interp_closest_row, v_interp_closest_column, "v tracking", screensize)  # v
-            show_eyetracking(uv_interp_closest_row, uv_interp_closest_column, "uv tracking", screensize)  # v
+
+            vector_end = (output_vector_in_eye_frame[0], output_vector_in_eye_frame[1])
+
+            #show_eyetracking(u_interp_closest_row, u_interp_closest_column, "u tracking", screensize, vector_end)  # u
+            show_eyetracking(v_interp_closest_row, v_interp_closest_column, "v tracking", screensize, vector_end)  # v
+            #show_eyetracking(uv_interp_closest_row, uv_interp_closest_column, "uv tracking", vector_end)  # uv
 
 
         if keyboard.is_pressed('s') and not press_s:
@@ -298,9 +307,9 @@ def main():
             start_mode = False
             cv2.waitKey(1)
             unhide_taskbar()
-            cv2.destroyWindow("u tracking")
+            #cv2.destroyWindow("u tracking")
             cv2.destroyWindow("v tracking")
-            cv2.destroyWindow("uv tracking")
+            #cv2.destroyWindow("uv tracking")
             print("Eyetracker stops...")
 
         cv2.imshow('Dlib Landmarks', frame)  # visualization of detection

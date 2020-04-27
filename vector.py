@@ -8,7 +8,7 @@ def find_vector(left_center_pupil, left_center_eye, right_center_pupil, right_ce
     :param left_center_eye: center of left eye
     :param right_center_pupil: center of right pupil
     :param right_center_eye: center of right eye
-    :return: [x, y, size], vector of position x, y and it's size
+    :return: [x, y, magnitude, direction], vector of position x, y it's magnitude and direction
     '''
     l_x = left_center_pupil[0] - left_center_eye[0]  # left eye x
     l_y = left_center_pupil[1] - left_center_eye[1]   # left eye y
