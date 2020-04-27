@@ -12,29 +12,94 @@ def uv_from_vector(vector):
     return uv
 
 
-def find_closest_in_array(array, value, closest_from_every_row=None):
-    '''
-    Finds closest number and its coordinates in array
-    :param array: numpy array with at least two rows
-    :param value: value, that is rearched
-    :return: [number, row, column]
-    '''
-    ro = -1  # not 0 because len array returns from 1 not from 0
-    closest_from_every_row = []
-    closest_from_every_row_row = []
-    closest_from_every_row_column = []
-    for i in range(0, len(array)):
-        ro = ro + 1
-        array_line = np.asarray(array[i])
-        idx = (np.abs(array_line - value)).argmin()  # get position
-        closest_from_every_row.append(array_line[idx])  # closest numbers from row
-        closest_from_every_row_row.append(ro)  # coordinate row
-        closest_from_every_row_column.append(idx)  # coordinate column
+def difference_value(u_interpolated_array, v_interpolated_array):
+    max_difference_u = int((u_interpolated_array.max() - u_interpolated_array.min())/2)
+    max_difference_v = int((v_interpolated_array.max() - v_interpolated_array.min())/2)
+    return max_difference_u, max_difference_v
 
-    closest_from_every_row = np.asarray(closest_from_every_row)
-    idx_from_every_row = (np.abs(closest_from_every_row - value)).argmin()  # get position prom closest numbers in row
-    return closest_from_every_row[idx_from_every_row], closest_from_every_row_row[idx_from_every_row], \
-           closest_from_every_row_column[idx_from_every_row]
+
+def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max_difference_u, max_difference_v):
+    '''
+    Finds the most accurate vector in u, v vector field.
+    :param u_interpolated_array: interpolated u field/array of vectors
+    :param v_interpolated_array: interpolated v field/array of vectors
+    :param value: (x, y) value
+    :param max_difference_u: from function difference_value
+    :param max_difference_v: from function difference_value
+    :return: result_numbers, result_x, result_y, result_diff
+    '''
+
+    result_numbers = 0
+    result_x = 0
+    result_y = 0
+    result_diff = 0
+
+    if u_interpolated_array.shape == v_interpolated_array.shape:
+        last_diff_u = 10
+        u_best_numbers = []
+        u_best_number_x = []
+        u_best_number_y = []
+        u_best_number_diff = []
+
+        for i in range(0, u_interpolated_array.shape[0]):
+            for y in range(0, u_interpolated_array.shape[1]):
+                number = u_interpolated_array[i, y]
+                diff = number - value[0]
+                if 0 <= diff < last_diff_u:
+                    last_diff_u = diff
+                    u_best_numbers.append(number)
+                    u_best_number_x.append(i)
+                    u_best_number_y.append(y)
+                    u_best_number_diff.append(diff)
+        print("1")
+        last_diff_v = 10
+        v_best_numbers = []
+        v_best_number_x = []
+        v_best_number_y = []
+        v_best_number_diff = []
+
+        for i in range(0, v_interpolated_array.shape[0]):
+            for y in range(0, v_interpolated_array.shape[1]):
+                number = v_interpolated_array[i, y]
+                diff = number - value[1]
+                if 0 <= diff < last_diff_v:
+                    last_diff_v = diff
+                    v_best_numbers.append(number)
+                    v_best_number_x.append(i)
+                    v_best_number_y.append(y)
+                    v_best_number_diff.append(diff)
+        print("2")
+        u2 = np.zeros(u_interpolated_array.shape, np.uint8)
+        v2 = np.zeros(v_interpolated_array.shape, np.uint8)
+
+        for i in range(0, len(u_best_numbers)):
+            u2[u_best_number_x[i], u_best_number_y[i]] = u_best_numbers[i]
+        for i in range(0, len(v_best_numbers)):
+            v2[v_best_number_x[i], v_best_number_y[i]] = v_best_numbers[i]
+        print("3")
+        for i in range(0, u2.shape[0]):
+            for y in range(0, u2.shape[1]):
+                if u2[i, y] == 0 and v2[i, y] != 0:
+                    u2[i, y] = u_interpolated_array[i, y]
+                elif u2[i, y] != 0 and v2[i, y] == 0:
+                    v2[i, y] = v_interpolated_array[i, y]
+        print("4")
+        last_diff_result = 100
+        for i in range(0, u2.shape[0]):
+            for y in range(0, u2.shape[1]):
+                if u2[i, y] != 0 and v2[i, y] != 0:
+                    diff_b1 = np.abs(u2[i, y] - value[0])
+                    diff_b2 = np.abs(v2[i, y] - value[1])
+                    diff = np.abs(diff_b1 + diff_b2)
+                    if 0 <= diff < last_diff_result:
+                        last_diff_result = diff
+                        result_numbers = (u2[i, y], v2[i, y])
+                        result_x = i
+                        result_y = y
+                        result_diff = last_diff_result
+        print("5")
+    return result_numbers, result_x, result_y, result_diff
+
 
 def hide_taskbar():
     '''
@@ -79,6 +144,7 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector
     :param coordinate_y: coordinate y
     :param window_name: window name in string
     :param screensize: screensize
+    :param vector_end_coordinates: x and y coordinate from vector function
     :return:
     '''
     mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255  # mask with size of screen and value 255
@@ -90,4 +156,3 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector
     cv2.circle(mask, (coordinate_x, coordinate_y), circle_size, (0, 0, 255), -1)  # lower left
     cv2.arrowedLine(mask, start_point, end_point, color=(0, 255, 0), thickness=1)
     cv2.imshow(window_name, mask)
-    cv2.waitKey(1)

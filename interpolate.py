@@ -21,31 +21,27 @@ def interpolation(lower_left_corner, upper_left_corner, middle, lower_right_corn
  u = [lower_left_corner[2], upper_left_corner[2], middle[2], lower_right_corner[2], upper_right_corner[2]]
  v = [lower_left_corner[3], upper_left_corner[3], middle[3], lower_right_corner[3], upper_right_corner[3]]
 
- ll = math.sqrt(lower_left_corner[2] * lower_left_corner[2] + lower_left_corner[3] * lower_left_corner[3])
- up = math.sqrt(upper_left_corner[2] * upper_left_corner[2] + upper_left_corner[3] * upper_left_corner[3])
- m = math.sqrt(middle[2] * middle[2] + middle[3] * middle[3])
- lr = math.sqrt(lower_right_corner[2] * lower_right_corner[2] + lower_right_corner[3] * lower_right_corner[3])
- ur = math.sqrt(upper_right_corner[2] * upper_right_corner[2] + upper_right_corner[3] * upper_right_corner[3])
- uv = [ll, up, m, lr, ur]
+ #ll = math.sqrt(lower_left_corner[2] * lower_left_corner[2] + lower_left_corner[3] * lower_left_corner[3])
+ #up = math.sqrt(upper_left_corner[2] * upper_left_corner[2] + upper_left_corner[3] * upper_left_corner[3])
+ #m = math.sqrt(middle[2] * middle[2] + middle[3] * middle[3])
+ #lr = math.sqrt(lower_right_corner[2] * lower_right_corner[2] + lower_right_corner[3] * lower_right_corner[3])
+ #ur = math.sqrt(upper_right_corner[2] * upper_right_corner[2] + upper_right_corner[3] * upper_right_corner[3])
+ #uv = [ll, up, m, lr, ur]
 
  plt.figure(1)
  plt.quiver(x, y, u, v)  # show measured vectors
 
- xx = np.linspace(min(x), max(x), 20)  # new x ax for interpolated data screen_size[0]
- yy = np.linspace(min(y), max(y), 20)  # new y ax for interpolated data screen_size[1]
+ xx = np.linspace(min(x), max(x), screen_size[0])  # new x ax for interpolated data
+ yy = np.linspace(min(y), max(y), screen_size[1])  # new y ax for interpolated data
  xx, yy = np.meshgrid(xx, yy)
 
  points = np.transpose(np.vstack((x, y)))
  u_interp = griddata(points, u, (xx, yy), method='cubic')  # interpolate u
  v_interp = griddata(points, v, (xx, yy), method='cubic')  # interpolate v
- uv_interp = griddata(points, uv, (xx, yy), method='cubic')  # interpolate u
+# uv_interp = griddata(points, uv, (xx, yy), method='cubic')  # interpolate u
 
  plt.figure(2)
  plt.quiver(xx, yy, u_interp, v_interp)  # show interpolated vectors
  plt.show()
 
- # plt.figure(3)
- # plt.quiver(xx, yy, uv_interp, uv_interp)  # show interpolated vectors
- # plt.show()
-
- return u_interp, v_interp, uv_interp
+ return u_interp, v_interp  # uv_interp
