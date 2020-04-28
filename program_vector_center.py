@@ -169,23 +169,15 @@ def main():
             calibrating_vector_in_frame_right = calibrate_vector_eye_center(right_center_pupil_in_eye_frame)
 
         if press_v:
-            # finding eye center
-            #left_center_eye, left_center_eye_in_eye_frame = eye_center_dlib(left_eye_crop, [min_left[0], min_left[1]])
-            #right_center_eye, right_center_eye_in_eye_frame = eye_center_dlib(right_eye_crop, [min_right[0], min_right[1]])
-
+            # get vector coordinates in frame
             left_vector_center = vector_start_center(calibrating_vector_in_frame_left, [min_left[0], min_left[1]])
             right_vector_center = vector_start_center(calibrating_vector_in_frame_right, [min_right[0], min_right[1]])
-
-            #print("left_vector_center", left_vector_center)
-            #print("right_vector_center", right_vector_center)
 
             # finding vector
             output_vector_in_eye_frame = find_vector(left_center_pupil_in_eye_frame,
                                                      (calibrating_vector_in_frame_left[0], calibrating_vector_in_frame_left[1]),
                                                      right_center_pupil_in_eye_frame,
                                                      (calibrating_vector_in_frame_right[0], calibrating_vector_in_frame_right[1]))
-            #print("output_vector_in_eye_frame", output_vector_in_eye_frame)
-
 
             # start of vector
             start_left = (left_vector_center[0], left_vector_center[1])  # (left_center_eye[0], left_center_eye[1])
@@ -304,21 +296,17 @@ def main():
 
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-            #print("screensize", screensize)
             hide_taskbar()
 
             vector_end = (output_vector_in_eye_frame[0], output_vector_in_eye_frame[1])
 
             # get result x and result y tam kde maji byt
-            #print("result_x", result_x)
-            #print("result_y", result_y)
             show_eyetracking(result_x, result_y, "Eyetracking", screensize, vector_end, interpolation_size)  # u
 
 
         if keyboard.is_pressed('s') and not press_s:
             press_s = True
             press_e = False
-            start_mode = False
             cv2.waitKey(1)
             unhide_taskbar()
             cv2.destroyWindow("Eyetracking")

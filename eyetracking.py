@@ -24,8 +24,8 @@ def difference_value(u_interpolated_array, v_interpolated_array):
     :return: max_difference_u, max_difference_v
     '''
     max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/50
-    max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/50
-    print("difference", max_difference_u, max_difference_v)
+    max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/20
+    #print("difference", max_difference_u, max_difference_v)
     return max_difference_u, max_difference_v
 
 
@@ -62,7 +62,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                     u_best_number_x.append(y)
                     u_best_number_y.append(i)
                     u_best_number_diff.append(diff)
-        print("1")
+        #print("1")
         last_diff_v = 10
         v_best_numbers = []
         v_best_number_x = []
@@ -79,7 +79,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                     v_best_number_x.append(y)
                     v_best_number_y.append(i)
                     v_best_number_diff.append(diff)
-        print("2")
+        #print("2")
 
         if v_best_numbers == [] and v_best_number_x == [] and v_best_number_y == [] and v_best_number_diff == []:
             print("Difference is to small to find some position. Change the difference.")
@@ -87,14 +87,14 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
             u2 = np.zeros(u_interpolated_array.shape, np.float32)
             v2 = np.zeros(v_interpolated_array.shape, np.float32)
 
-            print("v_best_number_x", len(v_best_number_x))
+            #print("v_best_number_x", len(v_best_number_x))
 
             for i in range(0, len(u_best_number_x)):
                 u2[u_best_number_y[i], u_best_number_x[i]] = u_best_numbers[i]
             for i in range(0, len(v_best_number_x)):
                 v2[v_best_number_y[i], v_best_number_x[i]] = v_best_numbers[i]
 
-            print("3")
+            #print("3")
 
             for i in range(0, u2.shape[0]):
                 for y in range(0, u2.shape[1]):
@@ -103,7 +103,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                     elif u2[i, y] != 0 and v2[i, y] == 0:
                         v2[i, y] = v_interpolated_array[i, y]
 
-            print("4")
+            #print("4")
 
             last_diff_result = 5
             for i in range(0, u2.shape[0]):
@@ -117,7 +117,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                             result_y = y
                             result_diff = last_diff_result
 
-            print("5")
+            #print("5")
 
     else:
         print("ERROR...u and v interpolated vectors should have the same size.")
@@ -160,7 +160,7 @@ def unhide_taskbar():
     user32.ShowWindow(hWnd, SW_SHOW)
 
 
-def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector_end_coordinates):
+def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector_end_coordinates, interpolation_size):
     '''
     Visualize eyetracking
     :param coordinate_x: coordinate x
@@ -175,8 +175,8 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector
     #end_point = (int(vector_end_coordinates[0]*10 + start_point[0]), int(vector_end_coordinates[1]*10 + start_point[1]))
    # circle_size = 4
 
-    mask = np.zeros((108, 192), np.uint8) + 255  # mask with size of screen and value 255
-    start_point = (int(192/2), int(108/2))  # nebo opacne?
+    mask = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255  # mask with size of screen and value 255
+    start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))  # nebo opacne?
     end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]), int(vector_end_coordinates[1] * 10 + start_point[1]))
     circle_size = 1
 
@@ -185,6 +185,5 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector
     cv2.circle(mask, (coordinate_x, coordinate_y), circle_size, (0, 0, 255), -1)  # lower left
     cv2.arrowedLine(mask, start_point, end_point, color=(0, 255, 0), thickness=1)
     cv2.imshow(window_name, mask)
-
 
 unhide_taskbar()

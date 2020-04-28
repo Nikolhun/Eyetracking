@@ -13,7 +13,7 @@ from eyetracking import difference_value, find_closest_in_array, hide_taskbar, u
 
 
 print("Set threshold for left and right eye.")
-print("Show vector for calibration by pressing v.")
+print("Look into the middle of the screen and press v for calibrating vector.")
 
 
 #######################################################################################################################
@@ -300,7 +300,7 @@ def main():
             # get result x and result y tam kde maji byt
             print("result_x", result_x)
             print("result_y", result_y)
-            show_eyetracking(result_x, result_y, "Eyetracking", screensize, vector_end)  # u
+            show_eyetracking(result_x, result_y, "Eyetracking", screensize, vector_end, interpolation_size)  # u
 
 
         if keyboard.is_pressed('s') and not press_s:
