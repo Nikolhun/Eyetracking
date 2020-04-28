@@ -2,6 +2,11 @@ import keyboard
 
 
 def lower_left(vector):
+    '''
+    Save coordinates x, y, u, v from lower left corner.
+    :param vector: x, y, u, v from vector
+    :return: coordinates x, y, u, v
+    '''
     #cv2.circle(mask, (circle_size, screensize[0] - circle_size), circle_size, (0, 0, 255), -1)  # lower left
     #print('Look into lower left corner and press ENTER.')
     lower_left_state = False
@@ -15,6 +20,11 @@ def lower_left(vector):
 
 
 def upper_left(vector):
+    '''
+        Save coordinates x, y, u, v from upper left corner.
+        :param vector: x, y, u, v from vector
+        :return: coordinates x, y, u, v
+        '''
     #cv2.circle(mask, (circle_size, circle_size), circle_size, (0, 0, 255), -1)  # uper left
     #print('Look into upper left corner and press ENTER.')
     upper_left_state = False
@@ -28,6 +38,11 @@ def upper_left(vector):
 
 
 def middle_screen(vector):
+    '''
+        Save coordinates x, y, u, v from middle.
+        :param vector: x, y, u, v from vector
+        :return: coordinates x, y, u, v
+        '''
     # cv2.circle(mask, (screensize[1] - circle_size, screensize[0] - circle_size), circle_size, (0, 0, 255), -1)  # lower right
     # print('Look into lower right corner and press ENTER.')
     middle_state = False
@@ -41,6 +56,11 @@ def middle_screen(vector):
 
 
 def lower_right(vector):
+    '''
+        Save coordinates x, y, u, v from lower right corner.
+        :param vector: x, y, u, v from vector
+        :return: coordinates x, y, u, v
+        '''
     #cv2.circle(mask, (screensize[1] - circle_size, screensize[0] - circle_size), circle_size, (0, 0, 255), -1)  # lower right
     #print('Look into lower right corner and press ENTER.')
     lower_right_state = False
@@ -54,6 +74,11 @@ def lower_right(vector):
 
 
 def upper_right(vector):
+    '''
+        Save coordinates x, y, u, v from upper right corner.
+        :param vector: x, y, u, v from vector
+        :return: coordinates x, y, u, v
+        '''
     #cv2.circle(mask, (screensize[1] - circle_size, circle_size), circle_size, (0, 0, 255), -1)  # uper right
     #print('Look into upper right corner and press ENTER.')
     upper_right_state = False

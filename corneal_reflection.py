@@ -1,7 +1,6 @@
 import cv2
 
-#rozdělit na detect a odstranit?
-def detect_corneal_reflection(img, threshold_from_trackbar):
+def delete_corneal_reflection(img, threshold_from_trackbar):
     '''
     It removes conrneal reflection.
     :param img: image
@@ -15,11 +14,6 @@ def detect_corneal_reflection(img, threshold_from_trackbar):
     threshold = cv2.dilate(threshold, None, iterations=1)  # dilate picture
     row = threshold.shape[0]
     coll = threshold.shape[1]
-    #contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    #cv2.imshow("threshold", threshold)
-    #cv2.imshow("corneal reflection", gray_frame)
-    #cv2.drawContours(gray_frame, contours, -1, (0, 0, 255), 1)
-    #mask = np.zeros(3, 3)
     for i in range(0, row):
         for y in range(0, coll):
             if threshold[i, y] == 0:

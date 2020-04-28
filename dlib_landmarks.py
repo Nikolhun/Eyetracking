@@ -2,37 +2,52 @@ import cv2
 import numpy as np
 
 def view_face_frame(face, frame):
+    '''
+    View face frame.
+    :param face: face from faces
+    :param frame: frame you want to view face to
+    '''
     x, y = face.left(), face.top()
     x1, y1 = face.right(), face.bottom()
     cv2.rectangle(frame, (x, y), (x1, y1), (0, 255, 0), 2)
-    return
 
 
 def midpoint(p1, p2):
+    '''
+    Finds midpoint of two numbers.
+    :param p1: first number
+    :param p2: second number
+    :return: midpoint
+    '''
     return int((p1.x + p2.x)/2), int((p1.y + p2.y)/2)
 
 
 def draw_point(number, landmarks, frame):
+    '''
+    Draws points that shows face structures in Dlib.
+    :param number: number of landmark
+    :param landmarks: landmarks from predictor_dlib(gray, face)
+    :param frame: frame you want to draw points in
+    '''
     x = landmarks.part(number).x
     y = landmarks.part(number).y
     cv2.line(frame, (x, y), (x, y), (0, 0, 255), 2, 1)
 
 
-def eye_center(eye):
-    height, width = eye.shape
-    x = int(height/2)
-    y = int(width/2)
-    center = [x, y]
-    return center
-
-
 def eye_center_dlib(eye, position_for_eye):
+    '''
+    Gets center of eye in eye frame and in frame.
+    :param eye: eye array in gray
+    :param position_for_eye: position [0, 0] of eye frame
+    :return: [center, center_in_frame] center is center in whole array, center_in_frame is center in eye frame
+    '''
     height, width = eye.shape
     y = int(height/2)
     x = int(width/2)
     center = [x + position_for_eye[0], y + position_for_eye[1]]
     center_in_frame = [x, y]
     return center, center_in_frame
+
 
 def landmarks_array(number1, number2, number3, number4, number5, number6, landmarks, frame, lines):
     '''

@@ -3,9 +3,9 @@ import dlib
 import ctypes
 import keyboard
 import numpy as np
-from dlib_landmarks import draw_point, eye_center_dlib, landmarks_array, fill_frame, crop_eyes
+from dlib_landmarks import view_face_frame, draw_point, eye_center_dlib, landmarks_array, fill_frame, crop_eyes
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
-from corneal_reflection import detect_corneal_reflection
+from corneal_reflection import delete_corneal_reflection
 from vector import find_vector
 from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right
 from interpolate import interpolation
@@ -51,6 +51,8 @@ def main():
     cv2.createTrackbar('Right', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
 
+    interpolation_size = (192, 108)
+
     left_center_pupil_in_eye_frame = [0, 0]
     right_center_pupil_in_eye_frame = [0, 0]
     output_vector_in_eye_frame = [0, 0, 0, 0]
@@ -59,11 +61,11 @@ def main():
     min_left = [0, 0]
     min_right = [0, 0]
     send_calibration_data_state = True
-    upper_left_corner = [0, 0, 0]
-    upper_right_corner = [0, 0, 0]
-    middle = [0, 0, 0]
-    lower_left_corner = [0, 0, 0]
-    lower_right_corner = [0, 0, 0]
+    upper_left_corner = [0, 0, 0, 0]
+    upper_right_corner = [0, 0, 0, 0]
+    middle = [0, 0, 0, 0]
+    lower_left_corner = [0, 0, 0, 0]
+    lower_right_corner = [0, 0, 0, 0]
     size_of_interpolated_map = 100
     u_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
     v_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
@@ -86,7 +88,7 @@ def main():
 # ---------------------------------- Dlib Landmark face detection --------------------------------------------------- #
         faces = detector_dlib(gray)
         for face in faces:
-            #view_face_frame(face, frame)  # view face frame
+            view_face_frame(face, frame)  # view face frame
             landmarks = predictor_dlib(gray, face)  # detect face structures using landmarks
 
             # crop eyes from the video
@@ -110,7 +112,7 @@ def main():
 
 # ---------------------------------- Left eye ---------------------------------------------------------------------- #
             threshold_left = cv2.getTrackbarPos('Right', 'Dlib Landmarks')  # getting position of the trackbar
-            no_reflex_left = detect_corneal_reflection(left_eye_crop, threshold_left)
+            no_reflex_left = delete_corneal_reflection(left_eye_crop, threshold_left)
             hsv_img_left = converting_gray_to_hsv(no_reflex_left)
             filtrated_img_left = filtration(hsv_img_left)
             gama_corrected_left = gama_correction(filtrated_img_left, 1.2)
@@ -132,7 +134,7 @@ def main():
 
 # ---------------------------------- Left eye ---------------------------------------------------------------------- #
             threshold_right = cv2.getTrackbarPos('Left', 'Dlib Landmarks')  # getting position of the trackbar
-            no_reflex_right = detect_corneal_reflection(right_eye_crop, threshold_right)
+            no_reflex_right = delete_corneal_reflection(right_eye_crop, threshold_right)
             hsv_img_right = converting_gray_to_hsv(no_reflex_right)
             filtrated_img_right = filtration(hsv_img_right)
             gama_corrected_right = gama_correction(filtrated_img_right, 1.2)
@@ -265,7 +267,7 @@ def main():
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
             u_interp, v_interp = interpolation(lower_left_corner, upper_left_corner, middle,
-                                             lower_right_corner, upper_right_corner, screensize)
+                                             lower_right_corner, upper_right_corner, interpolation_size)
 
             print("Calibration done successfully.")
             send_calibration_data_state = False

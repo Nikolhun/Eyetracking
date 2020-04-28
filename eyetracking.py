@@ -5,12 +5,24 @@ from ctypes import wintypes
 
 
 def normalize_array(array, value):
+    '''
+    Normalize array to have values 0-1.
+    :param array: array you want to normalize
+    :param value: value you want to normalize
+    :return: normalized_array, normlaized_value
+    '''
     normlaized_value = value/array.max()
     normalized_array = array/array.max()
     return normalized_array, normlaized_value
 
 
 def difference_value(u_interpolated_array, v_interpolated_array):
+    '''
+    Get maximum difference value for function find_closest_in_array
+    :param u_interpolated_array: u vector parameter (magnitude)
+    :param v_interpolated_array: v vector parameter (direction)
+    :return: max_difference_u, max_difference_v
+    '''
     max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/50
     max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/50
     print("difference", max_difference_u, max_difference_v)
@@ -158,10 +170,16 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector
     :param vector_end_coordinates: x and y coordinate from vector function
     :return:
     '''
-    mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255  # mask with size of screen and value 255
-    start_point = (int(screensize[0]/2), int(screensize[1]/2))  # nebo opacne?
-    end_point = (int(vector_end_coordinates[0]*10 + start_point[0]), int(vector_end_coordinates[1]*10 + start_point[1]))
-    circle_size = 4
+   # mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255  # mask with size of screen and value 255
+    #start_point = (int(screensize[0]/2), int(screensize[1]/2))  # nebo opacne?
+    #end_point = (int(vector_end_coordinates[0]*10 + start_point[0]), int(vector_end_coordinates[1]*10 + start_point[1]))
+   # circle_size = 4
+
+    mask = np.zeros((108, 192), np.uint8) + 255  # mask with size of screen and value 255
+    start_point = (int(192/2), int(108/2))  # nebo opacne?
+    end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]), int(vector_end_coordinates[1] * 10 + start_point[1]))
+    circle_size = 1
+
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
     cv2.circle(mask, (coordinate_x, coordinate_y), circle_size, (0, 0, 255), -1)  # lower left
