@@ -29,7 +29,7 @@ def find_vector(left_center_pupil, left_center_eye, right_center_pupil, right_ce
     l_direction = (l_direction_radian * 180) / math.pi  # from radians to degrees for left eye
     r_direction = (r_direction_radian * 180) / math.pi  # from radians to degrees for right eye
 
-    output_vector = [int((l_x + r_x)/2), int((l_y + r_y)/2), int((r_magnitude + l_magnitude)/2),
-                     int((r_direction + l_direction)/2)]  # vector [x, y, magnitude, direction]
+    output_vector = [(l_x + r_x)/2, (l_y + r_y)/2, (r_magnitude + l_magnitude)/2,
+                     (r_direction + l_direction)/2]  # vector [x, y, magnitude, direction]
     return output_vector
 

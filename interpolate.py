@@ -16,10 +16,14 @@ def interpolation(lower_left_corner, upper_left_corner, middle, lower_right_corn
  :return:
  '''
 
- x = [0, 0, int(screen_size[0] / 2), screen_size[0], screen_size[0]]
- y = [0, screen_size[1], int(screen_size[1] / 2), 0, screen_size[1]]
- u = [lower_left_corner[2], upper_left_corner[2], middle[2], lower_right_corner[2], upper_right_corner[2]]
- v = [lower_left_corner[3], upper_left_corner[3], middle[3], lower_right_corner[3], upper_right_corner[3]]
+ #x = [0, 0, int(screen_size[0] / 2), screen_size[0], screen_size[0]]
+ x = [0, 0, int(32/ 2), 32, 32]
+
+ #y = [0, screen_size[1], int(screen_size[1] / 2), 0, screen_size[1]]
+ y = [0, 18, int(18 / 2), 0, 18]
+
+ u = [int(lower_left_corner[2]), int(upper_left_corner[2]), int(middle[2]), int(lower_right_corner[2]), int(upper_right_corner[2])]
+ v = [int(lower_left_corner[3]), int(upper_left_corner[3]), int(middle[3]), int(lower_right_corner[3]), int(upper_right_corner[3])]
 
  #ll = math.sqrt(lower_left_corner[2] * lower_left_corner[2] + lower_left_corner[3] * lower_left_corner[3])
  #up = math.sqrt(upper_left_corner[2] * upper_left_corner[2] + upper_left_corner[3] * upper_left_corner[3])
@@ -31,8 +35,8 @@ def interpolation(lower_left_corner, upper_left_corner, middle, lower_right_corn
  plt.figure(1)
  plt.quiver(x, y, u, v)  # show measured vectors
 
- xx = np.linspace(min(x), max(x), screen_size[0])  # new x ax for interpolated data
- yy = np.linspace(min(y), max(y), screen_size[1])  # new y ax for interpolated data
+ xx = np.linspace(min(x), max(x), 32)  # new x ax for interpolated data screen_size[0]
+ yy = np.linspace(min(y), max(y), 18)  # new y ax for interpolated data screen_size[1]
  xx, yy = np.meshgrid(xx, yy)
 
  points = np.transpose(np.vstack((x, y)))

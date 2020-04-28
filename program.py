@@ -9,7 +9,7 @@ from corneal_reflection import detect_corneal_reflection
 from vector import find_vector
 from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right
 from interpolate import interpolation
-from eyetracking import difference_value, find_closest_in_array, uv_from_vector, hide_taskbar, unhide_taskbar, show_eyetracking
+from eyetracking import difference_value, find_closest_in_array, hide_taskbar, unhide_taskbar, show_eyetracking, normalize_array
 
 
 print("Set threshold for left and right eye.")
@@ -178,10 +178,10 @@ def main():
             start_right = (right_center_eye[0], right_center_eye[1])
 
             # end of vector
-            end_left = (output_vector_in_eye_frame[0]*10 + left_center_eye[0],
-                        output_vector_in_eye_frame[1]*10 + left_center_eye[1])
-            end_right = (output_vector_in_eye_frame[0]*10 + right_center_eye[0],
-                         output_vector_in_eye_frame[1]*10 + right_center_eye[1])
+            end_left = (int(output_vector_in_eye_frame[0]*10) + left_center_eye[0],
+                        int(output_vector_in_eye_frame[1]*10) + left_center_eye[1])
+            end_right = (int(output_vector_in_eye_frame[0]*10) + right_center_eye[0],
+                         int(output_vector_in_eye_frame[1]*10) + right_center_eye[1])
 
             if end_left == [0, 0] or end_right == [0, 0]:
                 print("Pupil not detected. Try to adjust threshold better and press v again..")
@@ -224,6 +224,7 @@ def main():
         if keyboard.is_pressed("5") and not press_5:
             press_5 = True
             send_calibration_data_state = True
+            press_e = False
             upper_right_corner = upper_right(output_vector_in_eye_frame)
             print("Upper right corner saved.")
             print("Pres enter for saving measured data or d for deleting measured data")
@@ -247,11 +248,11 @@ def main():
             middle = [0, 0, 0, 0]
             send_calibration_data_state = True
             press_s = True
-            press_e = False
+            press_e = True
 
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
-            send_calibration_data_state and keyboard.is_pressed("enter"):
+            send_calibration_data_state and keyboard.is_pressed("enter") and not press_e:
 
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
@@ -268,7 +269,7 @@ def main():
 
             print("Calibration done successfully.")
             send_calibration_data_state = False
-            press_e = False
+
             print("For starting eyetracker press e. For stopping eyetracker press s.")
 
         if keyboard.is_pressed("e") and not press_e:
@@ -277,18 +278,26 @@ def main():
             print("Eyetracker starts...")
 
         if press_e:
-            max_difference_u, max_difference_v = difference_value(u_interp, v_interp)
+            normalized_u_interp, normalized_u = normalize_array(u_interp, output_vector_in_eye_frame[2])
+            normalized_v_interp, normalized_v = normalize_array(v_interp, output_vector_in_eye_frame[3])
+
+            max_difference_u, max_difference_v = difference_value(normalized_u_interp, normalized_v_interp)
 
             result_numbers, result_x,\
-            result_y, result_diff = find_closest_in_array(u_interp, v_interp, (output_vector_in_eye_frame[2],
-                                                                               output_vector_in_eye_frame[3]),
+            result_y, result_diff = find_closest_in_array(normalized_u_interp, normalized_v_interp,
+                                                          (normalized_u, normalized_v),
                                                           max_difference_u, max_difference_v)  # u
 
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+            print("screensize", screensize)
             hide_taskbar()
 
             vector_end = (output_vector_in_eye_frame[0], output_vector_in_eye_frame[1])
+
+            # get result x and result y tam kde maji byt
+            print("result_x", result_x)
+            print("result_y", result_y)
             show_eyetracking(result_x, result_y, "Eyetracking", screensize, vector_end)  # u
 
 
