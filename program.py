@@ -11,7 +11,8 @@ from vector import find_vector
 from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left,\
     middle_right, middle_up, prepare_mask_for_calibration
 from interpolate import interpolation
-from eyetracking import difference_value, find_closest_in_array, hide_taskbar, unhide_taskbar, show_eyetracking, normalize_array
+from eyetracking import difference_value, find_closest_in_array, hide_taskbar, unhide_taskbar, show_eyetracking,\
+    normalize_array, accuracy_from_eyetracking
 
 
 print("Set threshold for left and right eye.")
@@ -57,7 +58,7 @@ def main():
     cv2.createTrackbar('Right', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
 
-    interpolation_size = (192, 108)
+    interpolation_size = (38, 18)
 
     left_center_pupil_in_eye_frame = [0, 0]
     right_center_pupil_in_eye_frame = [0, 0]
@@ -177,7 +178,6 @@ def main():
             press_v = True
             print("Vector mode activated.")
             print('For starting calibration mode press p.')
-            #messagebox.showinfo("Vector mode.", "Vector mode activated. For starting calibration mode press p.")
 
         if press_v:
             # finding eye center
@@ -212,14 +212,14 @@ def main():
 # ---------------------------------- Get main point for calibration  ------------------------------------------------ #
         if keyboard.is_pressed("p") and not press_p:
             hide_taskbar()
-            prepare_mask_for_calibration(screensize, 1)
+            prepare_mask_for_calibration(screensize, 1, output_vector_in_eye_frame)
             press_1 = False
             press_p = True
             print('Look into lower left corner and press 1.')
-            messagebox.showinfo("Hint.", "Follow the red circle with your eyes, press number 1-9 with each change.")
+            #messagebox.showinfo("Hint.", "Follow the red circle with your eyes, press number 1-9 with each change.")
 
         if keyboard.is_pressed("1") and not press_1:
-            prepare_mask_for_calibration(screensize, 2)
+            prepare_mask_for_calibration(screensize, 2, output_vector_in_eye_frame)
             press_1 = True
             press_2 = False
             press_detele = False
@@ -228,7 +228,7 @@ def main():
             print('Look into middle left and press 2.')
 
         if keyboard.is_pressed("2") and not press_2:
-            prepare_mask_for_calibration(screensize, 3)
+            prepare_mask_for_calibration(screensize, 3, output_vector_in_eye_frame)
             press_2 = True
             press_3 = False
             middle_left_corner = middle_left(output_vector_in_eye_frame)
@@ -236,7 +236,7 @@ def main():
             print('Look into upper left corner and press 3.')
 
         if keyboard.is_pressed("3") and not press_3:
-            prepare_mask_for_calibration(screensize, 4)
+            prepare_mask_for_calibration(screensize, 4, output_vector_in_eye_frame)
             press_3 = True
             press_4 = False
             upper_left_corner = upper_left(output_vector_in_eye_frame)
@@ -244,7 +244,7 @@ def main():
             print('Look into middle bottom and press 4.')
 
         if keyboard.is_pressed("4") and not press_4:
-            prepare_mask_for_calibration(screensize, 5)
+            prepare_mask_for_calibration(screensize, 5, output_vector_in_eye_frame)
             press_4 = True
             press_5 = False
             middle_bottom_corner = middle_bottom(output_vector_in_eye_frame)
@@ -252,7 +252,7 @@ def main():
             print('Look into middle of the screen and press 5.')
 
         if keyboard.is_pressed("5") and not press_5:
-            prepare_mask_for_calibration(screensize, 6)
+            prepare_mask_for_calibration(screensize, 6, output_vector_in_eye_frame)
             press_5 = True
             press_6 = False
             middle = middle_screen(output_vector_in_eye_frame)
@@ -260,7 +260,7 @@ def main():
             print('Look into middle top and press 6.')
 
         if keyboard.is_pressed("6") and not press_6:
-            prepare_mask_for_calibration(screensize, 7)
+            prepare_mask_for_calibration(screensize, 7, output_vector_in_eye_frame)
             press_6 = True
             press_7 = False
             middle_up_corner = middle_up(output_vector_in_eye_frame)
@@ -268,7 +268,7 @@ def main():
             print('Look into lower right corner and press 7.')
 
         if keyboard.is_pressed("7") and not press_7:
-            prepare_mask_for_calibration(screensize, 8)
+            prepare_mask_for_calibration(screensize, 8, output_vector_in_eye_frame)
             press_7 = True
             press_8 = False
             lower_right_corner = lower_right(output_vector_in_eye_frame)
@@ -276,7 +276,7 @@ def main():
             print('Look into middle right corner and press 8.')
 
         if keyboard.is_pressed("8") and not press_8:
-            prepare_mask_for_calibration(screensize, 9)
+            prepare_mask_for_calibration(screensize, 9, output_vector_in_eye_frame)
             press_8 = True
             press_9 = False
             middle_right_corner = middle_right(output_vector_in_eye_frame)
@@ -329,7 +329,6 @@ def main():
            middle_bottom_corner != [0, 0, 0, 0] and middle_left_corner != [0, 0, 0, 0] and \
            send_calibration_data_state and keyboard.is_pressed("enter") and not press_e:
 
-
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
             print("Middle left: ", middle_left_corner)
@@ -358,25 +357,53 @@ def main():
             print("Eyetracker starts...")
 
         if press_e:
-            normalized_u_interp, normalized_u = normalize_array(u_interp, output_vector_in_eye_frame[2])
-            normalized_v_interp, normalized_v = normalize_array(v_interp, output_vector_in_eye_frame[3])
+            normalized_u_interp, normalized_u = normalize_array(u_interp, output_vector_in_eye_frame[2])  # mormalized u
+            normalized_v_interp, normalized_v = normalize_array(v_interp, output_vector_in_eye_frame[3])  # normalized v
 
-            max_difference_u, max_difference_v = difference_value(normalized_u_interp, normalized_v_interp)
+
+            #max_difference_u, max_difference_v = difference_value(normalized_u_interp, normalized_v_interp)
 
             result_numbers, result_x,\
             result_y, result_diff = find_closest_in_array(normalized_u_interp, normalized_v_interp,
                                                           (normalized_u, normalized_v),
-                                                          max_difference_u, max_difference_v)  # u
+                                                          0.1, 0.1)  # u
 
             hide_taskbar()  # hides taskbar
 
             vector_end = (output_vector_in_eye_frame[0], output_vector_in_eye_frame[1])
 
-            # get result x and result y tam kde maji byt
-            print("result_x", result_x)
-            print("result_y", result_y)
             show_eyetracking(result_x, result_y, "Eyetracking", screensize, vector_end, interpolation_size)  # u
 
+            isize = [interpolation_size[0]-1, interpolation_size[1]-1]
+
+            my_coordinates_0 = [0, 0, u_interp[0, 0], v_interp[0, 0]]
+
+            my_coordinates_1 = [0, isize[0], u_interp[0, isize[0]],
+                                v_interp[0, isize[1]]]
+
+            my_coordinates_2 = [isize[1], isize[0], u_interp[isize[1],
+                                isize[0]], v_interp[isize[1], isize[0]]]
+
+            my_coordinates_3 = [isize[1], 0, u_interp[isize[1], 0],
+                                v_interp[isize[1], 0]]
+
+            hodnoty_0, procenta_0 = accuracy_from_eyetracking(my_coordinates_0, (output_vector_in_eye_frame[2],
+                                                                                 output_vector_in_eye_frame[3]),
+                                                              (result_x, result_y))
+            hodnoty_1, procenta_1 = accuracy_from_eyetracking(my_coordinates_1, (output_vector_in_eye_frame[2],
+                                                                                 output_vector_in_eye_frame[3]),
+                                                              (result_x, result_y))
+            hodnoty_2, procenta_2 = accuracy_from_eyetracking(my_coordinates_2, (output_vector_in_eye_frame[2],
+                                                                                 output_vector_in_eye_frame[3]),
+                                                              (result_x, result_y))
+            hodnoty_3, procenta_3 = accuracy_from_eyetracking(my_coordinates_3, (output_vector_in_eye_frame[2],
+                                                                                 output_vector_in_eye_frame[3]),
+                                                              (result_x, result_y))
+
+            print("hodnoty 0", hodnoty_0, "procenta_0", procenta_0)
+            print("hodnoty 1", hodnoty_1, "procenta_1", procenta_1)
+            print("hodnoty 2", hodnoty_2, "procenta_2", procenta_2)
+            print("hodnoty 3", hodnoty_3, "procenta_3", procenta_3)
 
         if keyboard.is_pressed('s') and not press_s:
             press_s = True

@@ -46,4 +46,14 @@ def interpolation(lower_left_corner, middle_left_corner, upper_left_corner, midd
  plt.quiver(xx, yy, u_interp, v_interp)  # show interpolated vectors
  plt.show()
 
+ u_interp_normalized = u_interp / u_interp.max()
+ v_interp_normalized = v_interp / v_interp.max()
+
+ print("u_interp", u_interp)
+ print("u_interp_normalized", u_interp_normalized)
+
+ plt.figure(3)
+ plt.quiver(xx, yy, u_interp_normalized, v_interp_normalized)  # show interpolated vectors
+ plt.show()
+
  return u_interp, v_interp  # uv_interp

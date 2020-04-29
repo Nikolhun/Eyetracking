@@ -227,6 +227,7 @@ def main():
             press_1 = True
             press_2 = False
             press_detele = False
+
             lower_left_corner = lower_left(output_vector_in_eye_frame)
             print("Lower left corner saved.")
             print('Look into middle left and press 2.')
@@ -288,7 +289,6 @@ def main():
             print('Look into upper right corner and press 9.')
 
         if keyboard.is_pressed("9") and not press_9:
-            prepare_mask_for_calibration(screensize, 10)
             press_9 = True
             send_calibration_data_state = True
             press_e = False

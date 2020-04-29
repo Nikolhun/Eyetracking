@@ -23,9 +23,11 @@ def difference_value(u_interpolated_array, v_interpolated_array):
     :param v_interpolated_array: v vector parameter (direction)
     :return: max_difference_u, max_difference_v
     '''
-    max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/50
-    max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/50
-    #print("difference", max_difference_u, max_difference_v)
+    #max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/30
+    #max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/20
+    max_difference_u = u_interpolated_array.max()
+    max_difference_v = v_interpolated_array.max()
+    print("difference", max_difference_u, max_difference_v)
     return max_difference_u, max_difference_v
 
 
@@ -173,13 +175,31 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector
 
     mask = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255  # mask with size of screen and value 255
     start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))  # get start points (point where is pupil qhen looking into the middle of the screen)
-    end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]), int(vector_end_coordinates[1] * 10 + start_point[1])) # get end point (point where the middle of pupil is * 10)
+    end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]), int(vector_end_coordinates[1] * 10 + start_point[1]))  # get end point (point where the middle of pupil is * 10)
     circle_size = 1
 
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
-    cv2.circle(mask, (coordinate_x, coordinate_y), circle_size, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, (coordinate_y, coordinate_x), circle_size, (0, 0, 255), -1)  # lower left
     cv2.arrowedLine(mask, start_point, end_point, color=(0, 255, 0), thickness=1)
     cv2.imshow(window_name, mask)
+
+
+def accuracy_from_eyetracking(my_coordinates, vector_coordinates, result):
+    x = np.abs(my_coordinates[0] - result[0])
+    y = np.abs(my_coordinates[1] - result[1])
+    u = np.abs(my_coordinates[2] - vector_coordinates[0])
+    v = np.abs(my_coordinates[3] - vector_coordinates[1])
+    if vector_coordinates[0] == 0:
+        vector_coordinates[0] = 0.0001
+    if vector_coordinates[1] == 0:
+        vector_coordinates[1] = 0.0001
+    print("vector_coordinates", vector_coordinates[0], "my coordinates", my_coordinates[0])
+    print("vector_coordinates abs", np.abs(vector_coordinates[0]))
+    up = np.abs((my_coordinates[2] / vector_coordinates[0]) * 100)
+    vp = np.abs((my_coordinates[3] / vector_coordinates[1]) * 100)
+    hodnoty = (x, y, u, v)
+    procenta = (up, vp)
+    return hodnoty, procenta
 
 unhide_taskbar()
