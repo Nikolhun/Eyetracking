@@ -7,7 +7,8 @@ from dlib_landmarks import view_face_frame, draw_point, eye_center_dlib, landmar
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import delete_corneal_reflection
 from vector import find_vector, calibrate_vector_eye_center, vector_start_center
-from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right
+from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left,\
+    middle_right, middle_up
 from interpolate import interpolation
 from eyetracking import difference_value, find_closest_in_array, hide_taskbar, unhide_taskbar, show_eyetracking, normalize_array
 
@@ -62,9 +63,13 @@ def main():
     min_right = [0, 0]
     send_calibration_data_state = True
     upper_left_corner = [0, 0, 0, 0]
+    middle_right_corner = [0, 0, 0, 0]
     upper_right_corner = [0, 0, 0, 0]
+    middle_left_corner = [0, 0, 0, 0]
     middle = [0, 0, 0, 0]
+    middle_up_corner = [0, 0, 0, 0]
     lower_left_corner = [0, 0, 0, 0]
+    middle_bottom_corner = [0, 0, 0, 0]
     lower_right_corner = [0, 0, 0, 0]
     size_of_interpolated_map = 100
     u_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
@@ -76,7 +81,11 @@ def main():
     press_3 = True
     press_4 = True
     press_5 = True
-    press_detele = False
+    press_6 = True
+    press_7 = True
+    press_8 = True
+    press_9 = True
+    press_detele = True
     press_s = True
     press_e = False
 
@@ -204,31 +213,59 @@ def main():
             press_detele = False
             lower_left_corner = lower_left(output_vector_in_eye_frame)
             print("Lower left corner saved.")
-            print('Look into upper left corner and press 2.')
+            print('Look into middle left and press 2.')
 
         if keyboard.is_pressed("2") and not press_2:
             press_2 = True
             press_3 = False
-            upper_left_corner = upper_left(output_vector_in_eye_frame)
-            print("Upper left corner saved.")
-            print('Look into middle of the screen and press 3.')
+            middle_left_corner = middle_left(output_vector_in_eye_frame)
+            print("Middle left saved.")
+            print('Look into upper left corner and press 3.')
 
         if keyboard.is_pressed("3") and not press_3:
             press_3 = True
             press_4 = False
-            middle = middle_screen(output_vector_in_eye_frame)
-            print("Middle saved.")
-            print('Look into lower right corner and press 4.')
+            upper_left_corner = upper_left(output_vector_in_eye_frame)
+            print("Upper left corner saved.")
+            print('Look into middle bottom and press 4.')
 
         if keyboard.is_pressed("4") and not press_4:
             press_4 = True
             press_5 = False
-            lower_right_corner = lower_right(output_vector_in_eye_frame)
-            print("Lower right corner saved.")
-            print('Look into upper left corner and press 5.')
+            middle_bottom_corner = middle_bottom(output_vector_in_eye_frame)
+            print("Middle bottom saved.")
+            print('Look into middle of the screen and press 5.')
 
         if keyboard.is_pressed("5") and not press_5:
             press_5 = True
+            press_6 = False
+            middle = middle_screen(output_vector_in_eye_frame)
+            print("Middle saved.")
+            print('Look into middle top and press 6.')
+
+        if keyboard.is_pressed("6") and not press_6:
+            press_6 = True
+            press_7 = False
+            middle_up_corner = middle_up(output_vector_in_eye_frame)
+            print("Middle top saved.")
+            print('Look into lower right corner and press 7.')
+
+        if keyboard.is_pressed("7") and not press_7:
+            press_7 = True
+            press_8 = False
+            lower_right_corner = lower_right(output_vector_in_eye_frame)
+            print("Lower right corner saved.")
+            print('Look into middle right corner and press 8.')
+
+        if keyboard.is_pressed("8") and not press_8:
+            press_8 = True
+            press_9 = False
+            middle_right_corner = middle_right(output_vector_in_eye_frame)
+            print("Middle right saved.")
+            print('Look into upper right corner and press 9.')
+
+        if keyboard.is_pressed("9") and not press_9:
+            press_9 = True
             send_calibration_data_state = True
             press_e = False
             upper_right_corner = upper_right(output_vector_in_eye_frame)
@@ -243,35 +280,51 @@ def main():
             print("Ready to start new measurment.")
             print("Press v to show vector")
             press_1 = True
-            upper_left_corner = [0, 0, 0, 0]
             press_2 = True
-            upper_right_corner = [0, 0, 0, 0]
             press_3 = True
-            lower_left_corner = [0, 0, 0, 0]
             press_4 = True
-            lower_right_corner = [0, 0, 0, 0]
             press_5 = True
+            press_6 = True
+            press_7 = True
+            press_8 = True
+            press_9 = True
+            lower_left_corner = [0, 0, 0, 0]
+            upper_right_corner = [0, 0, 0, 0]
+            upper_left_corner = [0, 0, 0, 0]
+            lower_right_corner = [0, 0, 0, 0]
             middle = [0, 0, 0, 0]
+            middle_right_corner = [0, 0, 0, 0]
+            middle_up_corner = [0, 0, 0, 0]
+            middle_bottom_corner = [0, 0, 0, 0]
+            middle_left_corner = [0, 0, 0, 0]
             send_calibration_data_state = True
             press_s = True
-            press_e = False
+            press_e = True
 
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
-            send_calibration_data_state and keyboard.is_pressed("enter") and not press_e:
+           middle_right_corner != [0, 0, 0, 0] and middle_up_corner != [0, 0, 0, 0] and \
+           middle_bottom_corner != [0, 0, 0, 0] and middle_left_corner != [0, 0, 0, 0] and \
+           send_calibration_data_state and keyboard.is_pressed("enter") and not press_e:
 
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
+            print("Middle left: ", middle_left_corner)
             print("Upper left corner: ", upper_left_corner)
+            print("Middle bottom: ", middle_bottom_corner)
             print("Middle: ", middle)
+            print("Middle top: ", middle_up_corner)
             print("Lower right corner: ", lower_right_corner)
+            print("Middle right: ", middle_right_corner)
             print("Upper right corner: ", upper_right_corner)
             print("Wait please. Calibration in progress...")
 
             user32 = ctypes.windll.user32
             screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-            u_interp, v_interp = interpolation(lower_left_corner, upper_left_corner, middle,
-                                             lower_right_corner, upper_right_corner, interpolation_size)
+            u_interp, v_interp = interpolation(lower_left_corner, middle_left_corner, upper_left_corner,
+                                               middle_bottom_corner, middle, middle_up_corner,
+                                               lower_right_corner, middle_right_corner, upper_right_corner,
+                                               interpolation_size)
 
             print("Calibration done successfully.")
             send_calibration_data_state = False

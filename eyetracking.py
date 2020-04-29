@@ -24,7 +24,7 @@ def difference_value(u_interpolated_array, v_interpolated_array):
     :return: max_difference_u, max_difference_v
     '''
     max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/50
-    max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/20
+    max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/50
     #print("difference", max_difference_u, max_difference_v)
     return max_difference_u, max_difference_v
 
@@ -170,14 +170,10 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector
     :param vector_end_coordinates: x and y coordinate from vector function
     :return:
     '''
-   # mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255  # mask with size of screen and value 255
-    #start_point = (int(screensize[0]/2), int(screensize[1]/2))  # nebo opacne?
-    #end_point = (int(vector_end_coordinates[0]*10 + start_point[0]), int(vector_end_coordinates[1]*10 + start_point[1]))
-   # circle_size = 4
 
     mask = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255  # mask with size of screen and value 255
-    start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))  # nebo opacne?
-    end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]), int(vector_end_coordinates[1] * 10 + start_point[1]))
+    start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))  # get start points (point where is pupil qhen looking into the middle of the screen)
+    end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]), int(vector_end_coordinates[1] * 10 + start_point[1])) # get end point (point where the middle of pupil is * 10)
     circle_size = 1
 
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
