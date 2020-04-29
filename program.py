@@ -3,12 +3,13 @@ import dlib
 import ctypes
 import keyboard
 import numpy as np
+from tkinter import messagebox
 from dlib_landmarks import view_face_frame, draw_point, eye_center_dlib, landmarks_array, fill_frame, crop_eyes
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import delete_corneal_reflection
 from vector import find_vector
 from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left,\
-    middle_right, middle_up
+    middle_right, middle_up, prepare_mask_for_calibration
 from interpolate import interpolation
 from eyetracking import difference_value, find_closest_in_array, hide_taskbar, unhide_taskbar, show_eyetracking, normalize_array
 
@@ -31,6 +32,10 @@ detector_params.minCircularity = 0.5  # min circularity (0.75)
 detector_params.maxCircularity = 1  # max circularity
 detector_params.maxArea = 5000  # max area (1800)
 detector_blob = cv2.SimpleBlobDetector_create(detector_params)  # saving parametres into detector
+
+# ----------------------- Get screen size --------------------------------------------------------------------------- #
+user32 = ctypes.windll.user32
+screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 
 
 #######################################################################################################################
@@ -74,8 +79,8 @@ def main():
     size_of_interpolated_map = 100
     u_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
     v_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
-    uv_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
     press_v = False
+    press_p = True
     press_1 = True
     press_2 = True
     press_3 = True
@@ -141,7 +146,7 @@ def main():
                             left_center_pupil_in_eye_frame = [cx_left, cy_left]
                             cv2.circle(frame, (left_center_pupil[0], left_center_pupil[1]), 1, (255, 0, 0), 2)
 
-# ---------------------------------- Left eye ---------------------------------------------------------------------- #
+# ---------------------------------- Right eye ---------------------------------------------------------------------- #
             threshold_right = cv2.getTrackbarPos('Left', 'Dlib Landmarks')  # getting position of the trackbar
             no_reflex_right = delete_corneal_reflection(right_eye_crop, threshold_right)
             hsv_img_right = converting_gray_to_hsv(no_reflex_right)
@@ -171,7 +176,8 @@ def main():
         if keyboard.is_pressed("v") and not press_v:  # "q" means close the detection
             press_v = True
             print("Vector mode activated.")
-            print('For starting calibration mode. Look into lower right corner and press 1.')
+            print('For starting calibration mode press p.')
+            #messagebox.showinfo("Vector mode.", "Vector mode activated. For starting calibration mode press p.")
 
         if press_v:
             # finding eye center
@@ -200,10 +206,20 @@ def main():
                 if output_vector_in_eye_frame[2] > 0:
                     cv2.arrowedLine(frame, start_left, end_left, color=(0, 255, 0), thickness=1)
                     cv2.arrowedLine(frame, start_right, end_right, color=(0, 255, 0), thickness=1)
-            press_1 = False
 
-# ---------------------------------- Start calibration after pressing c --------------------------------------------- #
+            press_p = False
+
+# ---------------------------------- Get main point for calibration  ------------------------------------------------ #
+        if keyboard.is_pressed("p") and not press_p:
+            hide_taskbar()
+            prepare_mask_for_calibration(screensize, 1)
+            press_1 = False
+            press_p = True
+            print('Look into lower left corner and press 1.')
+            messagebox.showinfo("Hint.", "Follow the red circle with your eyes, press number 1-9 with each change.")
+
         if keyboard.is_pressed("1") and not press_1:
+            prepare_mask_for_calibration(screensize, 2)
             press_1 = True
             press_2 = False
             press_detele = False
@@ -212,6 +228,7 @@ def main():
             print('Look into middle left and press 2.')
 
         if keyboard.is_pressed("2") and not press_2:
+            prepare_mask_for_calibration(screensize, 3)
             press_2 = True
             press_3 = False
             middle_left_corner = middle_left(output_vector_in_eye_frame)
@@ -219,6 +236,7 @@ def main():
             print('Look into upper left corner and press 3.')
 
         if keyboard.is_pressed("3") and not press_3:
+            prepare_mask_for_calibration(screensize, 4)
             press_3 = True
             press_4 = False
             upper_left_corner = upper_left(output_vector_in_eye_frame)
@@ -226,6 +244,7 @@ def main():
             print('Look into middle bottom and press 4.')
 
         if keyboard.is_pressed("4") and not press_4:
+            prepare_mask_for_calibration(screensize, 5)
             press_4 = True
             press_5 = False
             middle_bottom_corner = middle_bottom(output_vector_in_eye_frame)
@@ -233,6 +252,7 @@ def main():
             print('Look into middle of the screen and press 5.')
 
         if keyboard.is_pressed("5") and not press_5:
+            prepare_mask_for_calibration(screensize, 6)
             press_5 = True
             press_6 = False
             middle = middle_screen(output_vector_in_eye_frame)
@@ -240,6 +260,7 @@ def main():
             print('Look into middle top and press 6.')
 
         if keyboard.is_pressed("6") and not press_6:
+            prepare_mask_for_calibration(screensize, 7)
             press_6 = True
             press_7 = False
             middle_up_corner = middle_up(output_vector_in_eye_frame)
@@ -247,6 +268,7 @@ def main():
             print('Look into lower right corner and press 7.')
 
         if keyboard.is_pressed("7") and not press_7:
+            prepare_mask_for_calibration(screensize, 8)
             press_7 = True
             press_8 = False
             lower_right_corner = lower_right(output_vector_in_eye_frame)
@@ -254,6 +276,7 @@ def main():
             print('Look into middle right corner and press 8.')
 
         if keyboard.is_pressed("8") and not press_8:
+            prepare_mask_for_calibration(screensize, 9)
             press_8 = True
             press_9 = False
             middle_right_corner = middle_right(output_vector_in_eye_frame)
@@ -267,6 +290,8 @@ def main():
             upper_right_corner = upper_right(output_vector_in_eye_frame)
             print("Upper right corner saved.")
             print("Pres enter for saving measured data or d for deleting measured data")
+            cv2.destroyWindow('calibration')
+            unhide_taskbar()  # show taskbar
 
         if keyboard.is_pressed("d") and not press_detele:
             press_detele = True
@@ -275,6 +300,7 @@ def main():
             print("Measured data from corners were deleted.")
             print("Ready to start new measurment.")
             print("Press v to show vector")
+            press_p = True
             press_1 = True
             press_2 = True
             press_3 = True
@@ -293,15 +319,16 @@ def main():
             middle_up_corner = [0, 0, 0, 0]
             middle_bottom_corner = [0, 0, 0, 0]
             middle_left_corner = [0, 0, 0, 0]
-            send_calibration_data_state = True
+            send_calibration_data_state = False
             press_s = True
-            press_e = True
+            press_e = False
 
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
            middle_right_corner != [0, 0, 0, 0] and middle_up_corner != [0, 0, 0, 0] and \
            middle_bottom_corner != [0, 0, 0, 0] and middle_left_corner != [0, 0, 0, 0] and \
            send_calibration_data_state and keyboard.is_pressed("enter") and not press_e:
+
 
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
@@ -315,8 +342,6 @@ def main():
             print("Upper right corner: ", upper_right_corner)
             print("Wait please. Calibration in progress...")
 
-            user32 = ctypes.windll.user32
-            screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
             u_interp, v_interp = interpolation(lower_left_corner, middle_left_corner, upper_left_corner,
                                                middle_bottom_corner, middle, middle_up_corner,
                                                lower_right_corner, middle_right_corner, upper_right_corner,
@@ -343,10 +368,7 @@ def main():
                                                           (normalized_u, normalized_v),
                                                           max_difference_u, max_difference_v)  # u
 
-            user32 = ctypes.windll.user32
-            screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-            print("screensize", screensize)
-            hide_taskbar()
+            hide_taskbar()  # hides taskbar
 
             vector_end = (output_vector_in_eye_frame[0], output_vector_in_eye_frame[1])
 
@@ -359,7 +381,6 @@ def main():
         if keyboard.is_pressed('s') and not press_s:
             press_s = True
             press_e = False
-            start_mode = False
             cv2.waitKey(1)
             unhide_taskbar()
             cv2.destroyWindow("Eyetracking")
