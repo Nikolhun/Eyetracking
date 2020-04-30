@@ -10,8 +10,8 @@ from vector import find_vector, calibrate_vector_eye_center, vector_start_center
 from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left,\
     middle_right, middle_up, prepare_mask_for_calibration
 from interpolate import interpolation
-from eyetracking import difference_value, find_closest_in_array, hide_taskbar, unhide_taskbar, show_eyetracking,\
-    normalize_array
+from eyetracking import difference_value, find_closest_in_array, show_eyetracking,\
+    normalize_array  # hide_taskbar, unhide_taskbar
 
 
 print("Set threshold for left and right eye.")
@@ -216,7 +216,7 @@ def main():
 
 # ---------------------------------- Start calibration after pressing p --------------------------------------------- #
         if keyboard.is_pressed("p") and not press_p:
-            hide_taskbar()
+            #hide_taskbar()
             prepare_mask_for_calibration(screensize, 1)
             press_1 = False
             press_p = True
@@ -380,7 +380,7 @@ def main():
             press_s = True
             press_e = False
             cv2.waitKey(1)
-            unhide_taskbar()
+            #unhide_taskbar()
             cv2.destroyWindow("Eyetracking")
             print("Eyetracker stops...")
 

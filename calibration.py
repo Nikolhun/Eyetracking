@@ -1,6 +1,3 @@
-import keyboard
-from ctypes import wintypes
-import ctypes
 import numpy as np
 import cv2
 
@@ -51,9 +48,8 @@ def lower_left(vector):
     lower_left_state = False
     lower_left_corner = [0, 0, 0, 0]
     while not lower_left_state:
-        if keyboard.is_pressed("1"):
-            lower_left_corner = vector
-            lower_left_state = True
+        lower_left_corner = vector
+        lower_left_state = True
     return lower_left_corner
 
 
@@ -66,9 +62,8 @@ def middle_left(vector):
     middle_left_state = False
     middle_left_corner = [0, 0, 0, 0]
     while not middle_left_state:
-        if keyboard.is_pressed("2"):
-            middle_left_corner = vector
-            middle_left_state = True
+        middle_left_corner = vector
+        middle_left_state = True
     return middle_left_corner
 
 
@@ -81,9 +76,8 @@ def upper_left(vector):
     upper_left_state = False
     upper_left_corner = [0, 0, 0, 0]
     while not upper_left_state:
-        if keyboard.is_pressed("3"): # 2
-            upper_left_corner = vector
-            upper_left_state = True
+        upper_left_corner = vector
+        upper_left_state = True
     return upper_left_corner
 
 
@@ -96,9 +90,8 @@ def middle_bottom(vector):
     middle_bottom_state = False
     middle_bottom_corner = [0, 0, 0, 0]
     while not middle_bottom_state:
-        if keyboard.is_pressed("4"):
-            middle_bottom_corner = vector
-            middle_bottom_state = True
+        middle_bottom_corner = vector
+        middle_bottom_state = True
     return middle_bottom_corner
 
 
@@ -111,9 +104,8 @@ def middle_screen(vector):
     middle_state = False
     middle = [0, 0, 0, 0]
     while not middle_state:
-        if keyboard.is_pressed("5"): #3
-            middle = vector
-            middle_state = True
+        middle = vector
+        middle_state = True
     return middle
 
 
@@ -126,9 +118,8 @@ def middle_up(vector):
     middle_up_state = False
     middle_up_corner = [0, 0, 0, 0]
     while not middle_up_state:
-        if keyboard.is_pressed("6"):
-            middle_up_corner = vector
-            middle_up_state = True
+        middle_up_corner = vector
+        middle_up_state = True
     return middle_up_corner
 
 
@@ -141,9 +132,8 @@ def lower_right(vector):
     lower_right_state = False
     lower_right_corner = [0, 0, 0, 0]
     while not lower_right_state:
-        if keyboard.is_pressed("7"): #4
-            lower_right_corner = vector
-            lower_right_state = True
+        lower_right_corner = vector
+        lower_right_state = True
     return lower_right_corner
 
 
@@ -156,9 +146,8 @@ def middle_right(vector):
     middle_right_state = False
     middle_right_corner = [0, 0, 0, 0]
     while not middle_right_state:
-        if keyboard.is_pressed("8"):
-            middle_right_corner = vector
-            middle_right_state = True
+        middle_right_corner = vector
+        middle_right_state = True
     return middle_right_corner
 
 
@@ -171,7 +160,6 @@ def upper_right(vector):
     upper_right_state = False
     upper_right_corner = [0, 0, 0, 0]
     while not upper_right_state:
-        if keyboard.is_pressed("9"): #5
-            upper_right_corner = vector
-            upper_right_state = True
+        upper_right_corner = vector
+        upper_right_state = True
     return upper_right_corner

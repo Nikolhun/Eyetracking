@@ -1,7 +1,7 @@
 import cv2
-import ctypes
+#import ctypes
 import numpy as np
-from ctypes import wintypes
+#from ctypes import wintypes
 
 
 def normalize_array(array, value):
@@ -48,7 +48,6 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
     result_diff = 0
 
     if u_interpolated_array.shape == v_interpolated_array.shape:
-        last_diff_u = 10
         u_best_numbers = []
         u_best_number_x = []
         u_best_number_y = []
@@ -59,13 +58,11 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                 number = u_interpolated_array[i, y]
                 diff = np.abs(number - value[0])
                 if 0 <= diff < max_difference_u:  # last_diff_u
-                    last_diff_u = diff
                     u_best_numbers.append(number)
                     u_best_number_x.append(y)
                     u_best_number_y.append(i)
                     u_best_number_diff.append(diff)
-        #print("1")
-        last_diff_v = 10
+
         v_best_numbers = []
         v_best_number_x = []
         v_best_number_y = []
@@ -76,12 +73,10 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                 number = v_interpolated_array[i, y]
                 diff = np.abs(number - value[1])
                 if 0 <= diff < max_difference_v:
-                    last_diff_v = diff
                     v_best_numbers.append(number)
                     v_best_number_x.append(y)
                     v_best_number_y.append(i)
                     v_best_number_diff.append(diff)
-        #print("2")
 
         if v_best_numbers == [] and v_best_number_x == [] and v_best_number_y == [] and v_best_number_diff == []:
             print("Difference is to small to find some position. Change the difference.")
@@ -89,14 +84,10 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
             u2 = np.zeros(u_interpolated_array.shape, np.float32)
             v2 = np.zeros(v_interpolated_array.shape, np.float32)
 
-            #print("v_best_number_x", len(v_best_number_x))
-
             for i in range(0, len(u_best_number_x)):
                 u2[u_best_number_y[i], u_best_number_x[i]] = u_best_numbers[i]
             for i in range(0, len(v_best_number_x)):
                 v2[v_best_number_y[i], v_best_number_x[i]] = v_best_numbers[i]
-
-            #print("3")
 
             for i in range(0, u2.shape[0]):
                 for y in range(0, u2.shape[1]):
@@ -104,8 +95,6 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                         u2[i, y] = u_interpolated_array[i, y]
                     elif u2[i, y] != 0 and v2[i, y] == 0:
                         v2[i, y] = v_interpolated_array[i, y]
-
-            #print("4")
 
             last_diff_result = 5
             for i in range(0, u2.shape[0]):
@@ -119,47 +108,45 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                             result_y = y
                             result_diff = last_diff_result
 
-            #print("5")
-
     else:
         print("ERROR...u and v interpolated vectors should have the same size.")
     return result_numbers, result_x, result_y, result_diff
 
 
-def hide_taskbar():
-    '''
-    Function for hiding taskbar.
-    :return: Hides screen taskbar
-    '''
-    user32 = ctypes.WinDLL("user32")
-    SW_HIDE = 0
-    user32.FindWindowW.restype = wintypes.HWND
-    user32.FindWindowW.argtypes = (
-        wintypes.LPCWSTR,  # lpClassName
-        wintypes.LPCWSTR)  # lpWindowName
-    user32.ShowWindow.argtypes = (
-        wintypes.HWND,  # hWnd
-        ctypes.c_int)  # nCmdShow
-    hWnd = user32.FindWindowW(u"Shell_traywnd", None)
-    user32.ShowWindow(hWnd, SW_HIDE)
+#def hide_taskbar():
+ #   '''
+  #  Function for hiding taskbar.
+  #  :return: Hides screen taskbar
+  #  '''
+  #  user32 = ctypes.WinDLL("user32")
+  #  SW_HIDE = 0
+  #  user32.FindWindowW.restype = wintypes.HWND
+  #  user32.FindWindowW.argtypes = (
+  #      wintypes.LPCWSTR,  # lpClassName
+  #      wintypes.LPCWSTR)  # lpWindowName
+  #  user32.ShowWindow.argtypes = (
+  #      wintypes.HWND,  # hWnd
+  #      ctypes.c_int)  # nCmdShow
+  #  hWnd = user32.FindWindowW(u"Shell_traywnd", None)
+  #  user32.ShowWindow(hWnd, SW_HIDE)
 
 
-def unhide_taskbar():
-    '''
-    Function for showing taskbar.
-    :return: Show screen taskbar
-    '''
-    user32 = ctypes.WinDLL("user32")
-    SW_SHOW = 5
-    user32.FindWindowW.restype = wintypes.HWND
-    user32.FindWindowW.argtypes = (
-        wintypes.LPCWSTR,  # lpClassName
-        wintypes.LPCWSTR)  # lpWindowName
-    user32.ShowWindow.argtypes = (
-        wintypes.HWND,  # hWnd
-        ctypes.c_int)  # nCmdShow
-    hWnd = user32.FindWindowW(u"Shell_traywnd", None)
-    user32.ShowWindow(hWnd, SW_SHOW)
+#def unhide_taskbar():
+#    '''
+#    Function for showing taskbar.
+#    :return: Show screen taskbar
+#    '''
+ #   user32 = ctypes.WinDLL("user32")
+  #  SW_SHOW = 5
+  #  user32.FindWindowW.restype = wintypes.HWND
+  #  user32.FindWindowW.argtypes = (
+  #      wintypes.LPCWSTR,  # lpClassName
+  #      wintypes.LPCWSTR)  # lpWindowName
+  #  user32.ShowWindow.argtypes = (
+  #      wintypes.HWND,  # hWnd
+  #      ctypes.c_int)  # nCmdShow
+  #  hWnd = user32.FindWindowW(u"Shell_traywnd", None)
+  #  user32.ShowWindow(hWnd, SW_SHOW)
 
 
 def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector_end_coordinates, interpolation_size):
@@ -190,16 +177,5 @@ def accuracy_from_eyetracking(my_coordinates, vector_coordinates, result):
     y = np.abs(my_coordinates[1] - result[1])
     u = np.abs(my_coordinates[2] - vector_coordinates[0])
     v = np.abs(my_coordinates[3] - vector_coordinates[1])
-    if vector_coordinates[0] == 0:
-        vector_coordinates[0] = 0.0001
-    if vector_coordinates[1] == 0:
-        vector_coordinates[1] = 0.0001
-    print("vector_coordinates", vector_coordinates[0], "my coordinates", my_coordinates[0])
-    print("vector_coordinates abs", np.abs(vector_coordinates[0]))
-    up = np.abs((my_coordinates[2] / vector_coordinates[0]) * 100)
-    vp = np.abs((my_coordinates[3] / vector_coordinates[1]) * 100)
     hodnoty = (x, y, u, v)
-    procenta = (up, vp)
-    return hodnoty, procenta
-
-unhide_taskbar()
+    return hodnoty
