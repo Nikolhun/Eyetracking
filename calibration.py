@@ -32,9 +32,9 @@ def prepare_mask_for_calibration(screensize, press, output_vector_in_eye_frame):
         print("Calibration works only with number 0-9.")
 
     cv2.circle(mask, coordinates, 10, (0, 0, 255), -1)  # lower left
-    start_point = (int(screensize[0] / 2), int(screensize[1] / 2))
-    end_point = end_point = (int(output_vector_in_eye_frame[0] * 10 + start_point[0]),
-                             int(output_vector_in_eye_frame[1] * 10 + start_point[1]))
+    start_point = (int(screensize[1] / 2), int(screensize[0] / 2))
+    end_point = (int(output_vector_in_eye_frame[1] * 10 + start_point[1]),
+                 int(output_vector_in_eye_frame[0] * 10 + start_point[0]))
     cv2.arrowedLine(mask, start_point, end_point, color=(0, 255, 0), thickness=1)
     cv2.imshow('calibration', mask)
 

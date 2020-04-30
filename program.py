@@ -15,10 +15,6 @@ from eyetracking import difference_value, find_closest_in_array, show_eyetrackin
     normalize_array, accuracy_from_eyetracking # hide_taskbar, unhide_taskbar,
 
 
-print("Set threshold for left and right eye.")
-print("Press v to show calibrating vector.")
-
-
 #######################################################################################################################
 # ------------------------------- Initiation part ------------------------------------------------------------------- #
 #######################################################################################################################
@@ -37,8 +33,12 @@ detector_blob = cv2.SimpleBlobDetector_create(detector_params)  # saving paramet
 # ----------------------- Get screen size --------------------------------------------------------------------------- #
 user32 = ctypes.windll.user32
 screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+interpolation_size = (38, 18)
+#screensize = (120, 1280) #rpi
 
 
+print("Set threshold for left and right eye.")
+print("Press v to show calibrating vector.")
 #######################################################################################################################
 # ------------------------------- Creating trackbar ----------------------------------------------------------------- #
 #######################################################################################################################
@@ -58,7 +58,7 @@ def main():
     cv2.createTrackbar('Right', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
 
-    interpolation_size = (38, 18)
+    mask_for_eyetracking = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255  # mask with size of screen and value 255
 
     left_center_pupil_in_eye_frame = [0, 0]
     right_center_pupil_in_eye_frame = [0, 0]
@@ -364,35 +364,32 @@ def main():
                                                           (normalized_u, normalized_v),
                                                           0.1, 0.1)  # u
 
-            vector_end = (output_vector_in_eye_frame[0], output_vector_in_eye_frame[1])
+            start_point_draw, end_point_draw = show_eyetracking(result_x, result_y, "Eyetracking",
+                                                               (output_vector_in_eye_frame[0],
+                                                                output_vector_in_eye_frame[1]),
+                                                                interpolation_size, mask_for_eyetracking)
 
-            show_eyetracking(result_x, result_y, "Eyetracking", screensize, vector_end, interpolation_size)  # u
+            #cv2.arrowedLine(mask_for_eyetracking, start_point_draw, end_point_draw, color=(0, 255, 0), thickness=1)
+            cv2.imshow("Eyetracking", mask_for_eyetracking)
 
             isize = [interpolation_size[0]-1, interpolation_size[1]-1]
 
-            my_coordinates_0 = [0, 0, u_interp[0, 0], v_interp[0, 0]]
+            hodnoty_0 = accuracy_from_eyetracking([0, 0, u_interp[0, 0], v_interp[0, 0]],
+                                                  (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
+                                                  (result_x, result_y))
 
-            my_coordinates_1 = [0, isize[0], u_interp[0, isize[0]],
-                                v_interp[0, isize[1]]]
+            hodnoty_1 = accuracy_from_eyetracking([0, isize[0], u_interp[0, isize[0]], v_interp[0, isize[1]]],
+                                                  (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
+                                                  (result_x, result_y))
 
-            my_coordinates_2 = [isize[1], isize[0], u_interp[isize[1],
-                                isize[0]], v_interp[isize[1], isize[0]]]
+            hodnoty_2 = accuracy_from_eyetracking([isize[1], isize[0], u_interp[isize[1],
+                                                   isize[0]], v_interp[isize[1], isize[0]]],
+                                                  (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
+                                                  (result_x, result_y))
 
-            my_coordinates_3 = [isize[1], 0, u_interp[isize[1], 0],
-                                v_interp[isize[1], 0]]
-
-            hodnoty_0 = accuracy_from_eyetracking(my_coordinates_0, (output_vector_in_eye_frame[2],
-                                                                                 output_vector_in_eye_frame[3]),
-                                                              (result_x, result_y))
-            hodnoty_1 = accuracy_from_eyetracking(my_coordinates_1, (output_vector_in_eye_frame[2],
-                                                                                 output_vector_in_eye_frame[3]),
-                                                              (result_x, result_y))
-            hodnoty_2 = accuracy_from_eyetracking(my_coordinates_2, (output_vector_in_eye_frame[2],
-                                                                                 output_vector_in_eye_frame[3]),
-                                                              (result_x, result_y))
-            hodnoty_3 = accuracy_from_eyetracking(my_coordinates_3, (output_vector_in_eye_frame[2],
-                                                                                 output_vector_in_eye_frame[3]),
-                                                              (result_x, result_y))
+            hodnoty_3 = accuracy_from_eyetracking([isize[1], 0, u_interp[isize[1], 0], v_interp[isize[1], 0]],
+                                                  (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
+                                                  (result_x, result_y))
 
             print("hodnoty 0", hodnoty_0)
             print("hodnoty 1", hodnoty_1)
@@ -411,7 +408,7 @@ def main():
         k = cv2.waitKey(1) & 0xFF
 
 # ---------------------------------- Quit program after pressing q -------------------------------------------------- #
-        if k == ord('q'):  #cv2.waitKey(1) & 0xFF == ord('q'):  # "q" means close the program
+        if k == ord('q'):
             break
     cap.release()
     cv2.destroyAllWindows()

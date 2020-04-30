@@ -149,7 +149,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
   #  user32.ShowWindow(hWnd, SW_SHOW)
 
 
-def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector_end_coordinates, interpolation_size):
+def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates, interpolation_size, mask):
     '''
     Visualize eyetracking
     :param coordinate_x: coordinate x
@@ -160,17 +160,17 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, screensize, vector
     :return:
     '''
 
-    mask = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255  # mask with size of screen and value 255
+    #mask = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255  # mask with size of screen and value 255
     start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))  # get start points (point where is pupil qhen looking into the middle of the screen)
     end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]), int(vector_end_coordinates[1] * 10 + start_point[1]))  # get end point (point where the middle of pupil is * 10)
-    circle_size = 1
+    circle_size = -1
 
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
-    cv2.circle(mask, (coordinate_y, coordinate_x), circle_size, (0, 0, 255), -1)  # lower left
-    cv2.arrowedLine(mask, start_point, end_point, color=(0, 255, 0), thickness=1)
-    cv2.imshow(window_name, mask)
-
+    cv2.rectangle(mask, (coordinate_y, coordinate_x), (coordinate_y, coordinate_x), (0, 255, 0), 1)
+    #cv2.circle(mask, (coordinate_y, coordinate_x), circle_size, (0, 0, 255), -1)
+    #cv2.imshow(window_name, mask)
+    return start_point, end_point
 
 def accuracy_from_eyetracking(my_coordinates, vector_coordinates, result):
     x = np.abs(my_coordinates[0] - result[0])

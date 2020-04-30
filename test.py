@@ -1,8 +1,10 @@
 import cv2
+import numpy as np
 
 while True:
-    a = 1
-    cv2.imshow("test", a)
+    mask = np.zeros((20, 20), np.uint8) + 255
+    #mask = mask[::4, ::4]
+    cv2.imshow("test", mask)
     k = cv2.waitKey(1) & 0xFF
     if k != 255:
         print(k)
