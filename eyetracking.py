@@ -113,43 +113,18 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
     return result_numbers, result_x, result_y, result_diff
 
 
-#def hide_taskbar():
- #   '''
-  #  Function for hiding taskbar.
-  #  :return: Hides screen taskbar
-  #  '''
-  #  user32 = ctypes.WinDLL("user32")
-  #  SW_HIDE = 0
-  #  user32.FindWindowW.restype = wintypes.HWND
-  #  user32.FindWindowW.argtypes = (
-  #      wintypes.LPCWSTR,  # lpClassName
-  #      wintypes.LPCWSTR)  # lpWindowName
-  #  user32.ShowWindow.argtypes = (
-  #      wintypes.HWND,  # hWnd
-  #      ctypes.c_int)  # nCmdShow
-  #  hWnd = user32.FindWindowW(u"Shell_traywnd", None)
-  #  user32.ShowWindow(hWnd, SW_HIDE)
+def make_bgr_mask(bf, gf, rf, size):
+    mask_for_eyetracking = np.zeros((size[0], size[1]), np.uint8)
+    mask_for_eyetracking = cv2.cvtColor(mask_for_eyetracking, cv2.COLOR_GRAY2BGR)
+    b, g, r = cv2.split(mask_for_eyetracking)
+    b[:, :] = bf
+    g[:, :] = gf
+    r[:, :] = rf
+    mask_for_eyetracking_bgr = cv2.merge([b, g, r])
+    return mask_for_eyetracking_bgr
 
 
-#def unhide_taskbar():
-#    '''
-#    Function for showing taskbar.
-#    :return: Show screen taskbar
-#    '''
- #   user32 = ctypes.WinDLL("user32")
-  #  SW_SHOW = 5
-  #  user32.FindWindowW.restype = wintypes.HWND
-  #  user32.FindWindowW.argtypes = (
-  #      wintypes.LPCWSTR,  # lpClassName
-  #      wintypes.LPCWSTR)  # lpWindowName
-  #  user32.ShowWindow.argtypes = (
-  #      wintypes.HWND,  # hWnd
-  #      ctypes.c_int)  # nCmdShow
-  #  hWnd = user32.FindWindowW(u"Shell_traywnd", None)
-  #  user32.ShowWindow(hWnd, SW_SHOW)
-
-
-def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates, interpolation_size, mask):
+def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates, interpolation_size, mask_gray):
     '''
     Visualize eyetracking
     :param coordinate_x: coordinate x
@@ -159,23 +134,31 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordin
     :param vector_end_coordinates: x and y coordinate from vector function
     :return:
     '''
-
     #mask = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255  # mask with size of screen and value 255
-    start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))  # get start points (point where is pupil qhen looking into the middle of the screen)
-    end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]), int(vector_end_coordinates[1] * 10 + start_point[1]))  # get end point (point where the middle of pupil is * 10)
-    circle_size = -1
 
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    # get start points (point where is pupil when looking into the middle of the screen)
+    start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))
+    # get end point (point where the middle of pupil is * 10)
+    end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]),
+                 int(vector_end_coordinates[1] * 10 + start_point[1]))
+
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)  # make new window with window name
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
-    cv2.rectangle(mask, (coordinate_y, coordinate_x), (coordinate_y, coordinate_x), (0, 255, 0), 1)
-    #cv2.circle(mask, (coordinate_y, coordinate_x), circle_size, (0, 0, 255), -1)
-    #cv2.imshow(window_name, mask)
-    return start_point, end_point
+    mask_gray[coordinate_x, coordinate_y] = 0  # shows position on screen
+    return start_point, end_point, mask_gray
+
 
 def accuracy_from_eyetracking(my_coordinates, vector_coordinates, result):
-    x = np.abs(my_coordinates[0] - result[0])
-    y = np.abs(my_coordinates[1] - result[1])
-    u = np.abs(my_coordinates[2] - vector_coordinates[0])
-    v = np.abs(my_coordinates[3] - vector_coordinates[1])
+    '''
+    Counts accuracy of eyetracker.
+    :param my_coordinates:
+    :param vector_coordinates:
+    :param result:
+    :return:
+    '''
+    x = int(np.abs(my_coordinates[0] - result[0]))
+    y = int(np.abs(my_coordinates[1] - result[1]))
+    u = round(np.abs(my_coordinates[2] - vector_coordinates[0]), 2)
+    v = round(np.abs(my_coordinates[3] - vector_coordinates[1]), 2)
     hodnoty = (x, y, u, v)
     return hodnoty

@@ -34,15 +34,12 @@ def gama_correction(img, gamma):
     '''
     # Apply gamma correction.
     gamma_corrected = np.array(255 * (img / 255) ** gamma, dtype='uint8')
-    # Show edited images.
-    #cv2.imshow('gamma_transformed' + str(gamma), gamma_corrected)
     return gamma_corrected
 
 
 def preprocessing(img, threshold):
     '''
-    Preprocessing picture: erode, dilate, morphology opening, morphology closing, bilateral filtration,
-    median filtration, gaussian filtration.
+    Preprocessing picture: erode, dilate, morphology opening, morphology closing.
     :param img: image in gray frame or hsv frame
     :param threshold: threshold for thresholding image into binary image
     :return: preprocessed_image, threshold
@@ -52,7 +49,6 @@ def preprocessing(img, threshold):
     img_dilate = cv2.dilate(img_erode, None, iterations=1)  # dilate picture
     img_open = cv2.morphologyEx(img_dilate, cv2.MORPH_OPEN, None)  # morphology opening
     preprocessed_img = cv2.morphologyEx(img_open, cv2.MORPH_CLOSE, None)  # morphology closing
-
     return preprocessed_img
 
 
