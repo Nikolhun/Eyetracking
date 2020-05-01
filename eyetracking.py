@@ -42,6 +42,8 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
     :return: result_numbers, result_x, result_y, result_diff
     '''
 
+    #img[np.where(img == (0.4, 0.4, 0.4))] = (0.54, 0.27, 0.27)
+
     result_numbers = 0
     result_x = 0
     result_y = 0
@@ -144,7 +146,9 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordin
 
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)  # make new window with window name
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
-    mask_gray[coordinate_x, coordinate_y] = 0  # shows position on screen
+    #mask_gray[np.abs(coordinate_x - interpolation_size[0]), coordinate_y] = 128  # shows position on screen
+    mask_gray[np.abs(coordinate_x - (interpolation_size[1]-1)), coordinate_y] = 0
+    #mask_gray[coordinate_x, coordinate_y] = 0
     return start_point, end_point, mask_gray
 
 

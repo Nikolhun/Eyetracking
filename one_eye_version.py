@@ -3,15 +3,14 @@ import dlib
 import ctypes
 import keyboard
 import numpy as np
-from dlib_landmarks import view_face_frame, draw_point, eye_center_dlib, landmarks_array, fill_frame, crop_eyes
+from one_eye_functions import eye_center, find_vector
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import delete_corneal_reflection
-from vector import find_vector
-from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left,\
-    middle_right, middle_up, prepare_mask_for_calibration
+from calibration import prepare_mask_for_calibration, lower_right, lower_left, upper_right, upper_left, middle_up,\
+    middle_right, middle_left, middle_bottom, middle_screen
 from interpolate import interpolation
-from eyetracking import find_closest_in_array, show_eyetracking, make_bgr_mask, normalize_array,\
-    accuracy_from_eyetracking
+from eyetracking import normalize_array, find_closest_in_array, show_eyetracking, accuracy_from_eyetracking
+
 
 
 #######################################################################################################################
@@ -61,19 +60,12 @@ def main():
 
 # ---------------------------------- Creating window for result and trackbars in it --------------------------------- #
     cv2.namedWindow('Dlib Landmarks')
-    cv2.createTrackbar('Right', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
-    cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
+    cv2.createTrackbar('Eye', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
 
 # ---------------------------------- Initiation part ---------------------------------------------------------------- #
-    #mask_for_eyetracking_bgr = make_bgr_mask(255, 255, 255, interpolation_size)
     mask_for_eyetracking = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255
-    left_center_pupil_in_eye_frame = [0, 0]
-    right_center_pupil_in_eye_frame = [0, 0]
-    output_vector_in_eye_frame = [0, 0, 0, 0]
-    left_eye_crop = [0, 0]
-    right_eye_crop = [0, 0]
-    min_left = [0, 0]
-    min_right = [0, 0]
+    pupil_center_in_frame = [0, 0]
+    vector = [0, 0, 0, 0]
     send_calibration_data_state = True
     upper_left_corner = [0, 0, 0, 0]
     middle_right_corner = [0, 0, 0, 0]
@@ -109,79 +101,35 @@ def main():
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # change color from rgb to gray
 
-# ---------------------------------- Dlib Landmark face detection --------------------------------------------------- #
-        faces = detector_dlib(gray)
-        for face in faces:
-           # view_face_frame(face, frame)  # view face frame
-            landmarks = predictor_dlib(gray, face)  # detect face structures using landmarks
+# ---------------------------------- Crop image to one eye ---------------------------------------------------------- #
+        crop_gray = gray[180:300, 240:400]
+        cv2.rectangle(frame, (240, 180), (240+160, 180+120), (0, 255, 0), 2)
+        move_frame_x = 240
+        move_frame_y = 180
 
-            # crop eyes from the video
-            left_landmarks_array = landmarks_array(36, 37, 38, 39, 40, 41, landmarks, gray, lines=0)
-            right_landmarks_array = landmarks_array(42, 43, 44, 45, 46, 47, landmarks, gray, lines=0)
+# ---------------------------------- Eye detection ------------------------------------------------------------------ #
+        threshold = cv2.getTrackbarPos('Eye', 'Dlib Landmarks')  # getting position of the trackbar
+        no_reflex = delete_corneal_reflection(crop_gray, threshold)  # deleting corneal reflex
+        hsv_img = converting_gray_to_hsv(no_reflex)  # converting frame to hsv
+        filtrated_img = filtration(hsv_img)  # applying some filtration
+        gama_corrected = gama_correction(filtrated_img, 1.2)  # gama correction
+        eye_preprocessed = preprocessing(gama_corrected, threshold)  # morfological operations
+        cv2.imshow("eye_processed", eye_preprocessed)
+        contours = contours_of_shape(eye_preprocessed, threshold)  # get contours
+        if contours is not None:
+            for c in contours:
+                if c is not None:
+                    m = cv2.moments(c)
+                    if m["m00"] > 1:
+                        cx = int(m["m10"] / m["m00"])  # x coordinate for middle of blob
+                        cy = int(m["m01"] / m["m00"])  # y coordinate for middle of blob
+                        # cv2.drawContours(eye_no_eyebrows_left, [c], -1, (0, 255, 0), 2)
+                        # cv2.circle(left_eye_crop, (cx, cy), 1, (0, 0, 255), 2)
+                        # position of left pupil
+                        pupil_center_in_frame = [cx, cy]
+                        pupil_center = [cx + move_frame_x, cy + move_frame_y]
+                        cv2.circle(frame, (pupil_center[0], pupil_center[1]), 1, (255, 0, 0), 2)
 
-            eye_fill = fill_frame(gray, left_landmarks_array, right_landmarks_array)  # black mask with just eyes
-
-            # crop eyes from black rectangle
-            left_eye_crop, min_left = crop_eyes(eye_fill, left_landmarks_array)
-            right_eye_crop, min_right = crop_eyes(eye_fill, right_landmarks_array)
-
-            # draw points into eyes
-            for i in range(36, 48):
-                draw_point(i, landmarks, frame)
-
-            # draw points into face
-            # for i in range(0, 67):
-            #   draw_point(i, landmarks, frame)
-
-# ---------------------------------- Left eye ---------------------------------------------------------------------- #
-            threshold_left = cv2.getTrackbarPos('Right', 'Dlib Landmarks')  # getting position of the trackbar
-            no_reflex_left = delete_corneal_reflection(left_eye_crop, threshold_left)  # deleting corneal reflex
-            hsv_img_left = converting_gray_to_hsv(no_reflex_left)  # converting frame to hsv
-            filtrated_img_left = filtration(hsv_img_left)  # applying some filtration
-            gama_corrected_left = gama_correction(filtrated_img_left, 1.2)  # gama correction
-            eye_preprocessed_left = preprocessing(gama_corrected_left, threshold_left)  # morfological operations
-            cv2.imshow("eye_processed_left", eye_preprocessed_left)
-            contours_left = contours_of_shape(eye_preprocessed_left, threshold_left)  # get contours
-            if contours_left is not None:
-                for c_left in contours_left:
-                    if c_left is not None:
-                        m_left = cv2.moments(c_left)
-                        if m_left["m00"] > 1:
-                            cx_left = int(m_left["m10"] / m_left["m00"])  # x coordinate for middle of blob
-                            cy_left = int(m_left["m01"] / m_left["m00"])  # y coordinate for middle of blob
-                            # cv2.drawContours(eye_no_eyebrows_left, [c], -1, (0, 255, 0), 2)
-                            # cv2.circle(left_eye_crop, (cx_left, cy_left), 1, (0, 0, 255), 2)
-                            # position of left pupil in whole frame
-                            left_center_pupil = [cx_left + min_left[0], cy_left + min_left[1]]
-                            # position of left pupil in eye frame
-                            left_center_pupil_in_eye_frame = [cx_left, cy_left]
-                            # show pupil
-                            cv2.circle(frame, (left_center_pupil[0], left_center_pupil[1]), 1, (255, 0, 0), 2)
-
-# ---------------------------------- Right eye ---------------------------------------------------------------------- #
-            threshold_right = cv2.getTrackbarPos('Left', 'Dlib Landmarks')  # getting position of the trackbar
-            no_reflex_right = delete_corneal_reflection(right_eye_crop, threshold_right)  # deleting corneal reflex
-            hsv_img_right = converting_gray_to_hsv(no_reflex_right)  # converting frame to hsv
-            filtrated_img_right = filtration(hsv_img_right)  # applying some filtration
-            gama_corrected_right = gama_correction(filtrated_img_right, 1.2)  # gama correction
-            eye_preprocessed_right = preprocessing(gama_corrected_right, threshold_right)  # morfological operations
-            cv2.imshow("preprocessing_right", eye_preprocessed_right)
-            contours_right = contours_of_shape(eye_preprocessed_right, threshold_right)  # get contours
-            if contours_right is not None:
-                for c_right in contours_right:
-                    if c_right is not None:
-                        m_right = cv2.moments(c_right)
-                        if m_right["m00"] > 1:
-                            cx_right = int(m_right["m10"] / m_right["m00"])  # x coordinate for middle of blob
-                            cy_right = int(m_right["m01"] / m_right["m00"])  # y coordinate for middle of blob
-                            # cv2.drawContours(eye_no_eyebrows_right, [c], -1, (0, 255, 0), 2)
-                            # cv2.circle(right_eye_crop, (cx_right, cy_right), 1, (0, 0, 255), 2)
-                            # position of right pupil in whole frame
-                            right_center_pupil = [cx_right + min_right[0], cy_right + min_right[1]]
-                            # position of right pupil in eye frame
-                            right_center_pupil_in_eye_frame = [cx_right, cy_right]
-                            # show pupil
-                            cv2.circle(frame, (right_center_pupil[0], right_center_pupil[1]), 1, (255, 0, 0), 2)
 
 # ---------------------------------- Show vector after pressing v --------------------------------------------------- #
         if k == ord('v') and not press_v:
@@ -190,104 +138,98 @@ def main():
             print('For starting calibration mode press p.')
 
         if press_v:
+
             # finding eye center
-            left_center_eye, left_center_eye_in_eye_frame = eye_center_dlib(left_eye_crop, [min_left[0], min_left[1]])
-            right_center_eye, right_center_eye_in_eye_frame = eye_center_dlib(right_eye_crop, [min_right[0],
-                                                                                               min_right[1]])
+            eye_center_coordinates_in_frame, eye_center_coordinates = eye_center(crop_gray, (move_frame_y, move_frame_x))
 
             # finding vector
-            output_vector_in_eye_frame = find_vector(left_center_pupil_in_eye_frame, left_center_eye_in_eye_frame,
-                                                     right_center_pupil_in_eye_frame, right_center_eye_in_eye_frame)
+            vector = find_vector(pupil_center_in_frame, eye_center_coordinates_in_frame)
 
             # start of vector
-            start_left = (left_center_eye[0], left_center_eye[1])
-            start_right = (right_center_eye[0], right_center_eye[1])
+            start = (eye_center_coordinates[0], eye_center_coordinates[1])
 
             # end of vector
-            end_left = (int(output_vector_in_eye_frame[0]*10) + left_center_eye[0],
-                        int(output_vector_in_eye_frame[1]*10) + left_center_eye[1])
-            end_right = (int(output_vector_in_eye_frame[0]*10) + right_center_eye[0],
-                         int(output_vector_in_eye_frame[1]*10) + right_center_eye[1])
-            print("test_vectoru", start_left, end_left)
+            end = (int(vector[0] + eye_center_coordinates[0]),
+                   int(vector[1] + eye_center_coordinates[1]))
+
             # show vector in frame
-            if end_left == [0, 0] or end_right == [0, 0]:
+            if end == [0, 0]:
                 print("Pupil not detected. Try to adjust threshold better and press v again..")
-            if end_left is not None and end_right is not None:
-                if output_vector_in_eye_frame[2] > 0:
-                    cv2.arrowedLine(frame, start_left, end_left, color=(0, 255, 0), thickness=1)
-                    cv2.arrowedLine(frame, start_right, end_right, color=(0, 255, 0), thickness=1)
+            else:
+                if vector[2] > 0:
+                    cv2.arrowedLine(frame, start, end, color=(0, 255, 0), thickness=1)
 
             press_p = False
 
 # ---------------------------------- Get main point for calibration  ------------------------------------------------ #
         if k == ord('p') and not press_p:
-            prepare_mask_for_calibration(screensize, 1, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 1, vector)
             press_1 = False
             press_p = True
             print('Look into lower left corner and press 1.')
 
         if k == ord('1') and not press_1:
-            prepare_mask_for_calibration(screensize, 2, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 2, vector)
             press_1 = True
             press_2 = False
             press_detele = False
-            lower_left_corner = lower_left(output_vector_in_eye_frame)
+            lower_left_corner = lower_left(vector)
             print("Lower left corner saved.")
             print('Look into middle left and press 2.')
 
         if k == ord('2') and not press_2:
-            prepare_mask_for_calibration(screensize, 3, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 3, vector)
             press_2 = True
             press_3 = False
-            middle_left_corner = middle_left(output_vector_in_eye_frame)
+            middle_left_corner = middle_left(vector)
             print("Middle left saved.")
             print('Look into upper left corner and press 3.')
 
         if k == ord('3') and not press_3:
-            prepare_mask_for_calibration(screensize, 4, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 4, vector)
             press_3 = True
             press_4 = False
-            upper_left_corner = upper_left(output_vector_in_eye_frame)
+            upper_left_corner = upper_left(vector)
             print("Upper left corner saved.")
             print('Look into middle bottom and press 4.')
 
         if k == ord('4') and not press_4:
-            prepare_mask_for_calibration(screensize, 5, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 5, vector)
             press_4 = True
             press_5 = False
-            middle_bottom_corner = middle_bottom(output_vector_in_eye_frame)
+            middle_bottom_corner = middle_bottom(vector)
             print("Middle bottom saved.")
             print('Look into middle of the screen and press 5.')
 
         if k == ord('5') and not press_5:
-            prepare_mask_for_calibration(screensize, 6, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 6, vector)
             press_5 = True
             press_6 = False
-            middle = middle_screen(output_vector_in_eye_frame)
+            middle = middle_screen(vector)
             print("Middle saved.")
             print('Look into middle top and press 6.')
 
         if k == ord('6') and not press_6:
-            prepare_mask_for_calibration(screensize, 7, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 7, vector)
             press_6 = True
             press_7 = False
-            middle_up_corner = middle_up(output_vector_in_eye_frame)
+            middle_up_corner = middle_up(vector)
             print("Middle top saved.")
             print('Look into lower right corner and press 7.')
 
         if k == ord('7') and not press_7:
-            prepare_mask_for_calibration(screensize, 8, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 8, vector)
             press_7 = True
             press_8 = False
-            lower_right_corner = lower_right(output_vector_in_eye_frame)
+            lower_right_corner = lower_right(vector)
             print("Lower right corner saved.")
             print('Look into middle right corner and press 8.')
 
         if k == ord('8') and not press_8:
-            prepare_mask_for_calibration(screensize, 9, output_vector_in_eye_frame)
+            prepare_mask_for_calibration(screensize, 9, vector)
             press_8 = True
             press_9 = False
-            middle_right_corner = middle_right(output_vector_in_eye_frame)
+            middle_right_corner = middle_right(vector)
             print("Middle right saved.")
             print('Look into upper right corner and press 9.')
 
@@ -295,7 +237,7 @@ def main():
             press_9 = True
             send_calibration_data_state = True
             press_e = False
-            upper_right_corner = upper_right(output_vector_in_eye_frame)
+            upper_right_corner = upper_right(vector)
             print("Upper right corner saved.")
             print("Pres enter for saving measured data or d for deleting measured data")
             cv2.destroyWindow('calibration')
@@ -368,8 +310,8 @@ def main():
             print("Eyetracker starts...")
 
         if press_e:
-            normalized_u_interp, normalized_u = normalize_array(u_interp, output_vector_in_eye_frame[2])  # normalize u
-            normalized_v_interp, normalized_v = normalize_array(v_interp, output_vector_in_eye_frame[3])  # normalize v
+            normalized_u_interp, normalized_u = normalize_array(u_interp, vector[2])  # normalize u
+            normalized_v_interp, normalized_v = normalize_array(v_interp, vector[3])  # normalize v
 
             result_numbers, result_x,\
             result_y, result_diff = find_closest_in_array(normalized_u_interp, normalized_v_interp,
@@ -379,8 +321,8 @@ def main():
             # show eyetracking result in frame called 'Eyetracking'
             start_point_draw, end_point_draw,\
             mask_for_eyetracking_output = show_eyetracking(result_x, result_y, "Eyetracking",
-                                                           (output_vector_in_eye_frame[0],
-                                                            output_vector_in_eye_frame[1]),
+                                                           (vector[0],
+                                                            vector[1]),
                                                             interpolation_size, mask_for_eyetracking)
 
             #cv2.arrowedLine(mask_for_eyetracking, start_point_draw, end_point_draw, color=(0, 255, 0), thickness=1)
@@ -395,20 +337,20 @@ def main():
             isize = [interpolation_size[0]-1, interpolation_size[1]-1]
 
             upper_left_accuracy = accuracy_from_eyetracking([0, 0, u_interp[0, 0], v_interp[0, 0]],
-                                                  (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
+                                                  (vector[2], vector[3]),
                                                   (result_x, result_y))
 
             upper_right_accuracy = accuracy_from_eyetracking([0, isize[0], u_interp[0, isize[0]], v_interp[0, isize[1]]],
-                                                  (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
+                                                  (vector[2], vector[3]),
                                                   (result_x, result_y))
 
             lower_right_accuracy = accuracy_from_eyetracking([isize[1], isize[0], u_interp[isize[1],
                                                    isize[0]], v_interp[isize[1], isize[0]]],
-                                                  (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
+                                                  (vector[2], vector[3]),
                                                   (result_x, result_y))
 
             lower_left_accuracy = accuracy_from_eyetracking([isize[1], 0, u_interp[isize[1], 0], v_interp[isize[1], 0]],
-                                                  (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
+                                                  (vector[2], vector[3]),
                                                   (result_x, result_y))
 
             print("upper left accuracy", upper_left_accuracy)
