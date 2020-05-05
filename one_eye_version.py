@@ -278,7 +278,7 @@ def main():
            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
            middle_right_corner != [0, 0, 0, 0] and middle_up_corner != [0, 0, 0, 0] and \
            middle_bottom_corner != [0, 0, 0, 0] and middle_left_corner != [0, 0, 0, 0] and \
-           send_calibration_data_state and keyboard.is_pressed("enter") and not press_e:
+           send_calibration_data_state and k == 13 and not press_e:
 
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)

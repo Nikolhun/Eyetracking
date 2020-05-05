@@ -3,39 +3,78 @@ import cv2
 
 
 def prepare_mask_for_calibration(screensize, press, output_vector_in_eye_frame):
-    mask = np.zeros((screensize[0], screensize[1]), np.uint8) + 255  # mask with size of screen and value 255
+    '''
+    Shows calibration points and prints text to navigate.
+    :param screensize: screensize in (rows, collumns)
+    :param press: number that is going to be pressed
+    :param output_vector_in_eye_frame: vector rom find vector
+    :return: shows window
+    '''
+    mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255  # mask with size of screen and value 255
     mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
     cv2.namedWindow('calibration', cv2.WINDOW_NORMAL)
     cv2.setWindowProperty('calibration', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
     circle_size = 40
 
     if press == 1:
-        coordinates = (circle_size, screensize[0] - circle_size)
+        coordinates = (circle_size, screensize[1] - circle_size)
+        text0 = ""
+        text1 = "Look into lower left and press 1"
     elif press == 2:
-        coordinates = (circle_size, int(screensize[0]/2))
+        coordinates = (circle_size, int(screensize[1]/2))
+        text0 = "Lower left saved"
+        text1 = "Look into middle left and press 2"
     elif press == 3:
         coordinates = (circle_size, circle_size)
+        text0 = "Middle left saved"
+        text1 = "Look into upper left and press 3"
     elif press == 4:
-        coordinates = (int(screensize[1]/2), screensize[0] - circle_size)
+        coordinates = (int(screensize[0]/2), screensize[1] - circle_size)
+        text0 = "Upper left saved"
+        text1 = "Look into middle bottom and press 4"
     elif press == 5:
-        coordinates = (int(screensize[1]/2), int(screensize[0]/2))
+        coordinates = (int(screensize[0]/2), int(screensize[1]/2))
+        text0 = "Middle bottom saved"
+        text1 = "Look into middle and press 5"
     elif press == 6:
-        coordinates = (int(screensize[1]/2), circle_size)
+        coordinates = (int(screensize[0]/2), circle_size)
+        text0 = "Middle saved"
+        text1 = "Look into middle top and press 6"
     elif press == 7:
-        coordinates = (screensize[1] - circle_size, screensize[0] - circle_size)
+        coordinates = (screensize[0] - circle_size, screensize[1] - circle_size)
+        text0 = "Middle top saved"
+        text1 = "Look into lower right and press 7"
     elif press == 8:
-        coordinates = (screensize[1] - circle_size, int(screensize[0]/2))
+        coordinates = (screensize[0] - circle_size, int(screensize[1]/2))
+        text0 = "Lower right saved"
+        text1 = "Look into middle right and press 8"
     elif press == 9:
-        coordinates = (screensize[1] - circle_size, circle_size)
+        coordinates = (screensize[0] - circle_size, circle_size)
+        text0 = "Middle right saved"
+        text1 = "Look into upper right and press 9"
+    elif press == 0:
+        coordinates = []
+        text0 = "Upper right saved"
+        text1 = "Pres enter to save measured data"
     else:
         coordinates = []
-        print("Calibration works only with number 0-9.")
+        text0 = "Calibration works only with numbers 1-9"
+        text1 = ""
 
-    cv2.circle(mask, coordinates, 10, (0, 0, 255), -1)  # lower left
-    start_point = (int(screensize[1] / 2), int(screensize[0] / 2))
-    end_point = (int(output_vector_in_eye_frame[1] * 10 + start_point[1]),
-                 int(output_vector_in_eye_frame[0] * 10 + start_point[0]))
-    cv2.arrowedLine(mask, start_point, end_point, color=(0, 255, 0), thickness=1)
+    if coordinates:
+        cv2.circle(mask, coordinates, 10, (0, 0, 255), -1)
+
+    # get size of the text to write it in the middle
+    text0_size, _ = cv2.getTextSize(text0, cv2.FONT_HERSHEY_SIMPLEX, 1, 1)
+    text1_size, _ = cv2.getTextSize(text1, cv2.FONT_HERSHEY_SIMPLEX, 1, 1)
+
+    start_point0 = (int(screensize[0] / 2) - int(text0_size[0]/2),
+                    int(screensize[1]/2) - int(text0_size[1]/2) - int(screensize[1] / 100))
+    start_point1 = (int(screensize[0] / 2) - int(text1_size[0]/2),
+                    int(screensize[1]/2) + int(text1_size[1]/2) + int(screensize[1] / 100))
+
+    cv2.putText(mask, text0, start_point0, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 1, cv2.LINE_AA)
+    cv2.putText(mask, text1, start_point1, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 1, cv2.LINE_AA)
     cv2.imshow('calibration', mask)
 
 

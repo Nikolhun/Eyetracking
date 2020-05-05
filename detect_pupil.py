@@ -19,9 +19,9 @@ def filtration(img):
     :param img: image in gray frame
     :return: filtrated image in gray frame
     '''
-    img_bilateral = cv2.bilateralFilter(img, 9, 75, 75)  # bilateral filtration
-    img_median = cv2.medianBlur(img_bilateral, 5)  # median filtration
-    filtrated_img = cv2.GaussianBlur(img_median, (5, 5), 0)  # Gaussian filtration
+    img_median = cv2.medianBlur(img, 5)  # median filtration
+    filtrated_img = cv2.bilateralFilter(img_median, 9, 75, 75)  # bilateral filtration
+    #filtrated_img = cv2.GaussianBlur(img_median, (5, 5), 0)  # Gaussian filtration
     return filtrated_img
 
 
@@ -29,7 +29,7 @@ def gama_correction(img, gamma):
     '''
     Function makes gamma correction acording to picture 'img' according to the parameter 'gamma'.
     :param img: picture in GRAY
-    :param gamma: gamma parameter, best it's 1.2
+    :param gamma: gamma parameter
     :return: gamma corrected picture in GRAY
     '''
     # Apply gamma correction.

@@ -1,6 +1,6 @@
 import cv2
 import dlib
-import ctypes  # for windows
+import ctypes
 import numpy as np
 from dlib_landmarks import view_face_frame, draw_point, eye_center_dlib, landmarks_array, fill_frame, crop_eyes
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
@@ -19,62 +19,24 @@ from eyetracking import find_closest_in_array, show_eyetracking, make_bgr_mask, 
 detector_dlib = dlib.get_frontal_face_detector()
 predictor_dlib = dlib.shape_predictor("Dlib_landmarks/shape_predictor_68_face_landmarks.dat")
 
-# ------------------------------ Settup and screen size setting ----------------------------------------------------- #
-print("Welcome in Eyetracking application!")
-print("Are you on Raspberry (r) or on Windows (w)?")
-computer = input()
-if computer == "r":
-    screensize = (120, 1280)
-    print("Choose resolution of your eyetraker.")
-    print("a) 1280 x 720")
-    print("b) 640 x 360")
-    print("c) 320 x 180")
-    print("d) 160 x 90")
-    print("e) 80 x 45")
-    print("f) 16 x 9")
-    eyetracker_resolution = input()
-    if eyetracker_resolution == "a":
-        size_of_output_screen = (1280, 720)
-    elif eyetracker_resolution == "b":
-        size_of_output_screen = (640, 360)
-    elif eyetracker_resolution == "c":
-        size_of_output_screen = (320, 180)
-    elif eyetracker_resolution == "d":
-        size_of_output_screen = (160, 90)
-    elif eyetracker_resolution == "e":
-        size_of_output_screen = (80, 45)
-    elif eyetracker_resolution == "f":
-        size_of_output_screen = (16, 9)
-elif computer == "w":
-    user32 = ctypes.windll.user32  # for windows
-    screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
-    print("Choose resolution of your eyetraker.")
-    print("a) 1536 x 864")
-    print("b) 768 x 432")
-    print("c) 384 x 216")
-    print("d) 192 x 108")
-    print("e) 96 x 54")
-    print("f) 48 x 27")
-    print("g) 32 x 17")
-    print("h) 16 x 9")
-    eyetracker_resolution = input()
-    if eyetracker_resolution == "a":
-        size_of_output_screen = (1536, 864)
-    elif eyetracker_resolution == "b":
-        size_of_output_screen = (768, 432)
-    elif eyetracker_resolution == "c":
-        size_of_output_screen = (384, 216)
-    elif eyetracker_resolution == "d":
-        size_of_output_screen = (192, 108)
-    elif eyetracker_resolution == "e":
-        size_of_output_screen = (96, 54)
-    elif eyetracker_resolution == "f":
-        size_of_output_screen = (48, 27)
-    elif eyetracker_resolution == "g":
-        size_of_output_screen = (32, 17)
-    elif eyetracker_resolution == "h":
-        size_of_output_screen = (16, 9)
+# ----------------------- Parametres for Blob Detection ------------------------------------------------------------- #
+detector_params = cv2.SimpleBlobDetector_Params()
+detector_params.filterByArea = True  # activates filtering by area
+detector_params.filterByCircularity = 1  # activates filtering by circularity
+detector_params.minCircularity = 0.5  # min circularity (0.75)
+detector_params.maxCircularity = 1  # max circularity
+detector_params.maxArea = 5000  # max area (1800)
+detector_blob = cv2.SimpleBlobDetector_create(detector_params)  # saving parametres into detector
 
+# ----------------------- Get screen size --------------------------------------------------------------------------- #
+user32 = ctypes.windll.user32
+screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+interpolation_size = (96, 54)
+#screensize = (120, 1280) #rpi
+
+
+print("Set threshold for left and right eye.")
+print("Press v to show calibrating vector.")
 #######################################################################################################################
 # ------------------------------- Creating trackbar ----------------------------------------------------------------- #
 #######################################################################################################################
@@ -85,19 +47,61 @@ def nothing(x):
     pass
 
 
+def prepare_mask_for_calibration_latex(screensize, press, output_vector_in_eye_frame):
+    mask = np.zeros((screensize[0], screensize[1]), np.uint8) + 255  # mask with size of screen and value 255
+    mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+    cv2.namedWindow('calibration', cv2.WINDOW_NORMAL)
+    cv2.setWindowProperty('calibration', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
+    circle_size = 40
+
+
+    coordinates0 = (circle_size, screensize[0] - circle_size)
+
+    coordinates1 = (circle_size, int(screensize[0]/2))
+
+    coordinates2 = (circle_size, circle_size)
+
+    coordinates3 = (int(screensize[1]/2), screensize[0] - circle_size)
+
+    coordinates4 = (int(screensize[1]/2), int(screensize[0]/2))
+
+    coordinates5 = (int(screensize[1]/2), circle_size)
+
+    coordinates6 = (screensize[1] - circle_size, screensize[0] - circle_size)
+
+    coordinates7 = (screensize[1] - circle_size, int(screensize[0]/2))
+
+    coordinates8 = (screensize[1] - circle_size, circle_size)
+
+    print("Calibration works only with number 0-9.")
+
+    cv2.circle(mask, coordinates0, 10, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, coordinates1, 10, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, coordinates2, 10, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, coordinates3, 10, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, coordinates4, 10, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, coordinates5, 10, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, coordinates6, 10, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, coordinates7, 10, (0, 0, 255), -1)  # lower left
+    cv2.circle(mask, coordinates8, 10, (0, 0, 255), -1)  # lower left
+
+
+    #start_point = (int(screensize[1] / 2), int(screensize[0] / 2))
+    #end_point = (int(output_vector_in_eye_frame[1] * 10 + start_point[1]),
+                 #int(output_vector_in_eye_frame[0] * 10 + start_point[0]))
+    #cv2.arrowedLine(mask, start_point, end_point, color=(0, 255, 0), thickness=1)
+    cv2.imshow('calibration', mask)
+    cv2.imwrite("calibration_points.jpg", mask)
 #######################################################################################################################
 # ---------------------------------- Main --------------------------------------------------------------------------- #
 #######################################################################################################################
 # ---------------------------------- Making video capture and video writers ----------------------------------------- #
 def main():
-    print("Set threshold for left and right eye.")
-    print("Press v to show calibrating vector.")
-
     cap = cv2.VideoCapture(0)  # reaching the port 0 for video capture
     fourcc_detection = cv2.VideoWriter_fourcc(*'XVID')
     out_detection = cv2.VideoWriter('detection.mkv', fourcc_detection, 20.0, (int(cap.get(3)), int(cap.get(4))))
     fourcc_mask = cv2.VideoWriter_fourcc(*'XVID')
-    out_mask = cv2.VideoWriter('mask.mkv', fourcc_mask, 20.0, size_of_output_screen)
+    out_mask = cv2.VideoWriter('mask.mkv', fourcc_mask, 20.0, interpolation_size)
 
 # ---------------------------------- Creating window for result and trackbars in it --------------------------------- #
     cv2.namedWindow('Dlib Landmarks')
@@ -105,7 +109,8 @@ def main():
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
 
 # ---------------------------------- Initiation part ---------------------------------------------------------------- #
-    mask_for_eyetracking = np.zeros((size_of_output_screen[1], size_of_output_screen[0]), np.uint8) + 255
+    #mask_for_eyetracking_bgr = make_bgr_mask(255, 255, 255, interpolation_size)
+    mask_for_eyetracking = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255
     left_center_pupil_in_eye_frame = [0, 0]
     right_center_pupil_in_eye_frame = [0, 0]
     output_vector_in_eye_frame = [0, 0, 0, 0]
@@ -127,7 +132,7 @@ def main():
     u_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
     v_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
     press_v = False
-    press_c = True
+    press_p = True
     press_1 = True
     press_2 = True
     press_3 = True
@@ -147,12 +152,12 @@ def main():
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # change color from rgb to gray
-        # gray = gray[::4, ::4]  # for rpi
+        # gray = gray[::4, ::4] #rpi
 
 # ---------------------------------- Dlib Landmark face detection --------------------------------------------------- #
         faces = detector_dlib(gray)
         for face in faces:
-           # view_face_frame(face, frame)  # view face frame
+            # view_face_frame(face, frame)  # view face frame
             landmarks = predictor_dlib(gray, face)  # detect face structures using landmarks
 
             # crop eyes from the video
@@ -207,6 +212,7 @@ def main():
             eye_preprocessed_right = preprocessing(filtrated_img_right, threshold_right)  # morfological operations
             cv2.imshow("eye_processed_right", eye_preprocessed_right)
             contours_right = contours_of_shape(eye_preprocessed_right, threshold_right)  # get contours
+
             if contours_right is not None:
                 for c_right in contours_right:
                     if c_right is not None:
@@ -214,14 +220,14 @@ def main():
                         if m_right["m00"] > 1:
                             cx_right = int(m_right["m10"] / m_right["m00"])  # x coordinate for middle of blob
                             cy_right = int(m_right["m01"] / m_right["m00"])  # y coordinate for middle of blob
-                            # cv2.drawContours(eye_no_eyebrows_right, [c], -1, (0, 255, 0), 2)
-                            # cv2.circle(right_eye_crop, (cx_right, cy_right), 1, (0, 0, 255), 2)
+
                             # position of right pupil in whole frame
                             right_center_pupil = [cx_right + min_right[0], cy_right + min_right[1]]
                             # position of right pupil in eye frame
                             right_center_pupil_in_eye_frame = [cx_right, cy_right]
                             # show pupil
                             cv2.circle(frame, (right_center_pupil[0], right_center_pupil[1]), 1, (255, 0, 0), 2)
+
 
 # ---------------------------------- Show vector after pressing v --------------------------------------------------- #
         if k == ord('v') and not press_v:
@@ -230,7 +236,6 @@ def main():
             print('For starting calibration mode press p.')
 
         if press_v:
-            press_c = False
             # finding eye center
             left_center_eye, left_center_eye_in_eye_frame = eye_center_dlib(left_eye_crop, [min_left[0], min_left[1]])
             right_center_eye, right_center_eye_in_eye_frame = eye_center_dlib(right_eye_crop, [min_right[0],
@@ -251,19 +256,20 @@ def main():
                          int(output_vector_in_eye_frame[1]*10) + right_center_eye[1])
 
             # show vector in frame
-            if left_center_pupil_in_eye_frame == [0, 0]:
-                print("Pupil not detected. Try to adjust the threshold better and press v again..")
-
+            if end_left == [0, 0] or end_right == [0, 0]:
+                print("Pupil not detected. Try to adjust threshold better and press v again..")
             if end_left is not None and end_right is not None:
                 if output_vector_in_eye_frame[2] > 0:
                     cv2.arrowedLine(frame, start_left, end_left, color=(0, 255, 0), thickness=1)
                     cv2.arrowedLine(frame, start_right, end_right, color=(0, 255, 0), thickness=1)
 
+            press_p = False
+
 # ---------------------------------- Get main point for calibration  ------------------------------------------------ #
-        if k == ord('c') and not press_c:
+        if k == ord('p') and not press_p:
             prepare_mask_for_calibration(screensize, 1, output_vector_in_eye_frame)
             press_1 = False
-            press_c = True
+            press_p = True
             print('Look into lower left corner and press 1.')
 
         if k == ord('1') and not press_1:
@@ -338,7 +344,7 @@ def main():
             upper_right_corner = upper_right(output_vector_in_eye_frame)
             print("Upper right corner saved.")
             print("Pres enter for saving measured data or d for deleting measured data")
-            prepare_mask_for_calibration(screensize, 0, output_vector_in_eye_frame)
+            cv2.destroyWindow('calibration')
 
 # ---------------------------------- Delete everything and start over ----------------------------------------------- #
         if k == ord('d') and not press_detele:
@@ -348,7 +354,7 @@ def main():
             print("Measured data from corners were deleted.")
             print("Ready to start new measurment.")
             print("Press v to show vector")
-            press_c = True
+            press_p = True
             press_1 = True
             press_2 = True
             press_3 = True
@@ -370,7 +376,6 @@ def main():
             send_calibration_data_state = False
             press_s = True
             press_e = False
-            cv2.destroyWindow('calibration')
 
 # ---------------------------------- Show calibration points and interpolate them ----------------------------------- #
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
@@ -378,9 +383,6 @@ def main():
            middle_right_corner != [0, 0, 0, 0] and middle_up_corner != [0, 0, 0, 0] and \
            middle_bottom_corner != [0, 0, 0, 0] and middle_left_corner != [0, 0, 0, 0] and \
            send_calibration_data_state and k == 13 and not press_e:
-
-            send_calibration_data_state = False
-            cv2.destroyWindow('calibration')
 
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
@@ -398,9 +400,11 @@ def main():
             u_interp, v_interp = interpolation(lower_left_corner, middle_left_corner, upper_left_corner,
                                                middle_bottom_corner, middle, middle_up_corner,
                                                lower_right_corner, middle_right_corner, upper_right_corner,
-                                               size_of_output_screen)
+                                               interpolation_size)
 
             print("Calibration done successfully.")
+            send_calibration_data_state = False
+
             print("For starting eyetracker press e. For stopping eyetracker press s.")
 
 # ---------------------------------- Start eyetracking -------------------------------------------------------------- #
@@ -423,7 +427,9 @@ def main():
             mask_for_eyetracking_output = show_eyetracking(result_x, result_y, "Eyetracking",
                                                            (output_vector_in_eye_frame[0],
                                                             output_vector_in_eye_frame[1]),
-                                                           size_of_output_screen, mask_for_eyetracking)
+                                                            interpolation_size, mask_for_eyetracking)
+
+            #cv2.arrowedLine(mask_for_eyetracking, start_point_draw, end_point_draw, color=(0, 255, 0), thickness=1)
 
 # ---------------------------------- Write video and show image ----------------------------------------------------- #
             out_detection.write(frame)
@@ -432,7 +438,7 @@ def main():
             cv2.imshow("Eyetracking", mask_for_eyetracking_output)
 
 # ---------------------------------- Analyse, accuracy result, ... -------------------------------------------------- #
-            isize = [size_of_output_screen[0] - 1, size_of_output_screen[1] - 1]
+            isize = [interpolation_size[0]-1, interpolation_size[1]-1]
 
             upper_left_accuracy = accuracy_from_eyetracking([0, 0, u_interp[0, 0], v_interp[0, 0]],
                                                   (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
