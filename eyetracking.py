@@ -126,7 +126,8 @@ def make_bgr_mask(bf, gf, rf, size):
     return mask_for_eyetracking_bgr
 
 
-def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates, interpolation_size, mask_gray):
+def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates,
+                     interpolation_size, mask_bgr):
     '''
     Visualize eyetracking
     :param coordinate_x: coordinate x
@@ -136,7 +137,6 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordin
     :param vector_end_coordinates: x and y coordinate from vector function
     :return:
     '''
-    #mask = np.zeros((interpolation_size[1], interpolation_size[0]), np.uint8) + 255  # mask with size of screen and value 255
 
     # get start points (point where is pupil when looking into the middle of the screen)
     start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))
@@ -146,10 +146,17 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordin
 
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)  # make new window with window name
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
-    #mask_gray[np.abs(coordinate_x - interpolation_size[0]), coordinate_y] = 128  # shows position on screen
-    mask_gray[np.abs(coordinate_x - (interpolation_size[1]-1)), coordinate_y] = 0
-    #mask_gray[coordinate_x, coordinate_y] = 0
-    return start_point, end_point, mask_gray
+
+    if mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and\
+       mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and\
+       mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] >= 11:
+
+        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] = mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] - 10
+    else:
+        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] = 0  # red color (0, 0, 255)
+        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] = 0
+
+    return start_point, end_point, mask_bgr
 
 
 def accuracy_from_eyetracking(my_coordinates, vector_coordinates, result):

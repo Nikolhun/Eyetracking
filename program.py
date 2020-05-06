@@ -106,6 +106,7 @@ def main():
 
 # ---------------------------------- Initiation part ---------------------------------------------------------------- #
     mask_for_eyetracking = np.zeros((size_of_output_screen[1], size_of_output_screen[0]), np.uint8) + 255
+    mask_for_eyetracking_bgr = cv2.cvtColor(mask_for_eyetracking, cv2.COLOR_GRAY2BGR)
     left_center_pupil_in_eye_frame = [0, 0]
     right_center_pupil_in_eye_frame = [0, 0]
     output_vector_in_eye_frame = [0, 0, 0, 0]
@@ -420,16 +421,16 @@ def main():
 
             # show eyetracking result in frame called 'Eyetracking'
             start_point_draw, end_point_draw,\
-            mask_for_eyetracking_output = show_eyetracking(result_x, result_y, "Eyetracking",
+            mask_bgr = show_eyetracking(result_x, result_y, "Eyetracking",
                                                            (output_vector_in_eye_frame[0],
                                                             output_vector_in_eye_frame[1]),
-                                                           size_of_output_screen, mask_for_eyetracking)
+                                                            size_of_output_screen,
+                                                            mask_for_eyetracking_bgr)
 
 # ---------------------------------- Write video and show image ----------------------------------------------------- #
             out_detection.write(frame)
-            mask_for_eyetracking_bgr = cv2.cvtColor(mask_for_eyetracking_output, cv2.COLOR_GRAY2BGR)
-            out_mask.write(mask_for_eyetracking_bgr)
-            cv2.imshow("Eyetracking", mask_for_eyetracking_output)
+            out_mask.write(mask_bgr)
+            cv2.imshow("Eyetracking", mask_bgr)
 
 # ---------------------------------- Analyse, accuracy result, ... -------------------------------------------------- #
             isize = [size_of_output_screen[0] - 1, size_of_output_screen[1] - 1]
