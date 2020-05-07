@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 
-def prepare_mask_for_calibration(screensize, press, output_vector_in_eye_frame):
+def prepare_mask_for_calibration(screensize, press):
     '''
     Shows calibration points and prints text to navigate.
     :param screensize: screensize in (rows, collumns)

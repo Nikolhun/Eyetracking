@@ -10,7 +10,7 @@ from vector import find_vector, calibrate_vector_eye_center, vector_start_center
 from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left,\
     middle_right, middle_up, prepare_mask_for_calibration
 from interpolate import interpolation
-from eyetracking import find_closest_in_array, show_eyetracking, make_bgr_mask, normalize_array,\
+from eyetracking import find_closest_in_array, show_eyetracking, normalize_array,\
     accuracy_from_eyetracking
 
 

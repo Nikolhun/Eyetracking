@@ -1,8 +1,8 @@
 import cv2
-#import ctypes
 import numpy as np
-#from ctypes import wintypes
-
+import time
+import random
+import threading
 
 def normalize_array(array, value):
     '''
@@ -11,8 +11,8 @@ def normalize_array(array, value):
     :param value: value you want to normalize
     :return: normalized_array, normlaized_value
     '''
-    normlaized_value = value/array.max()
-    normalized_array = array/array.max()
+    normlaized_value = value / array.max()
+    normalized_array = array / array.max()
     return normalized_array, normlaized_value
 
 
@@ -23,8 +23,8 @@ def difference_value(u_interpolated_array, v_interpolated_array):
     :param v_interpolated_array: v vector parameter (direction)
     :return: max_difference_u, max_difference_v
     '''
-    #max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/30
-    #max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/20
+    # max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/30
+    # max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/20
     max_difference_u = u_interpolated_array.max()
     max_difference_v = v_interpolated_array.max()
     print("difference", max_difference_u, max_difference_v)
@@ -42,7 +42,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
     :return: result_numbers, result_x, result_y, result_diff
     '''
 
-    #img[np.where(img == (0.4, 0.4, 0.4))] = (0.54, 0.27, 0.27)
+    # img[np.where(img == (0.4, 0.4, 0.4))] = (0.54, 0.27, 0.27)
 
     result_numbers = 0
     result_x = 0
@@ -115,31 +115,32 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
     return result_numbers, result_x, result_y, result_diff
 
 
-def make_bgr_mask(bf, gf, rf, size):
-    mask_for_eyetracking = np.zeros((size[0], size[1]), np.uint8)
-    mask_for_eyetracking = cv2.cvtColor(mask_for_eyetracking, cv2.COLOR_GRAY2BGR)
-    b, g, r = cv2.split(mask_for_eyetracking)
-    b[:, :] = bf
-    g[:, :] = gf
-    r[:, :] = rf
-    mask_for_eyetracking_bgr = cv2.merge([b, g, r])
-    return mask_for_eyetracking_bgr
+#def make_bgr_mask(bf, gf, rf, size):
+#    mask_for_eyetracking = np.zeros((size[0], size[1]), np.uint8)
+#    mask_for_eyetracking = cv2.cvtColor(mask_for_eyetracking, cv2.COLOR_GRAY2BGR)
+#    b, g, r = cv2.split(mask_for_eyetracking)
+#    b[:, :] = bf
+#    g[:, :] = gf
+#    r[:, :] = rf
+#    mask_for_eyetracking_bgr = cv2.merge([b, g, r])
+#    return mask_for_eyetracking_bgr
 
 
 def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates,
-                     interpolation_size, mask_bgr):
-    '''
+                     interpolation_size, mask_bgr, coordinates_of_center):
+    """
     Visualize eyetracking
     :param coordinate_x: coordinate x
     :param coordinate_y: coordinate y
     :param window_name: window name in string
-    :param screensize: screensize
     :param vector_end_coordinates: x and y coordinate from vector function
+    :param interpolation_size: interpolation size (x,y)
+    :param mask_bgr: output in rgb
     :return:
-    '''
+    """
 
     # get start points (point where is pupil when looking into the middle of the screen)
-    start_point = (int(interpolation_size[0]/2), int(interpolation_size[1]/2))
+    start_point = (int(interpolation_size[0] / 2), int(interpolation_size[1] / 2))
     # get end point (point where the middle of pupil is * 10)
     end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]),
                  int(vector_end_coordinates[1] * 10 + start_point[1]))
@@ -147,29 +148,72 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordin
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)  # make new window with window name
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
 
-    if mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and\
-       mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and\
-       mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] >= 11:
+    if mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] >= 11:
 
-        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] = mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] - 10
+        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] = \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] - 10
     else:
         mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] = 0  # red color (0, 0, 255)
         mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] = 0
 
-    return start_point, end_point, mask_bgr
+    return coordinate_x, coordinate_y, mask_bgr
 
 
-def accuracy_from_eyetracking(my_coordinates, vector_coordinates, result):
-    '''
+def accuracy_from_eyetracking(my_coordinates, vector_coordinates, result, accuracy_x, accuracy_y, accuracy_u, accuracy_v):
+    """
     Counts accuracy of eyetracker.
     :param my_coordinates:
     :param vector_coordinates:
     :param result:
     :return:
-    '''
+    """
     x = int(np.abs(my_coordinates[0] - result[0]))
     y = int(np.abs(my_coordinates[1] - result[1]))
     u = round(np.abs(my_coordinates[2] - vector_coordinates[0]), 2)
     v = round(np.abs(my_coordinates[3] - vector_coordinates[1]), 2)
-    hodnoty = (x, y, u, v)
-    return hodnoty
+    accuracy_result = (x, y, u, v)
+    accuracy_x.append(x)
+    accuracy_y.append(y)
+    accuracy_u.append(u)
+    accuracy_v.append(v)
+    return accuracy_result, accuracy_x, accuracy_y, accuracy_u, accuracy_v
+
+
+def dimension(img_before, scale_percent):
+    '''
+    Get dimension to reshape picture
+    :param img_before: image in bgr
+    :param scale_percent: percenteage
+    :return:
+    '''
+    mask_gray = cv2.cvtColor(img_before, cv2.COLOR_BGR2GRAY)
+    width = int(mask_gray.shape[1] * scale_percent / 100)
+    height = int(mask_gray.shape[0] * scale_percent / 100)
+    reshape_dimension = (width, height)
+    return reshape_dimension
+
+
+def change_coordinates_of_target(size_of_output_screen):
+    num_rows = random.randint(0 + int((3*100)/size_of_output_screen[0]),
+                              size_of_output_screen[0] - int((3*100)/size_of_output_screen[1]))
+    num_coll = random.randint(0 + int((3*100)/size_of_output_screen[0]),
+                              size_of_output_screen[1] - int((3*100)/size_of_output_screen[1]))
+    coordinates_of_center_dot = (num_rows, num_coll)
+    return coordinates_of_center_dot
+
+
+def empty_mask_for_eyetracking(size_of_output_screen):
+    mask_for_eyetracking = np.zeros((size_of_output_screen[1], size_of_output_screen[0]), np.uint8) + 255
+    mask_for_eyetracking_bgr = cv2.cvtColor(mask_for_eyetracking, cv2.COLOR_GRAY2BGR)
+    return mask_for_eyetracking_bgr
+
+
+def saving_accuracy(name, accuracy_xp, accuracy_yp, accuracy_up, accuracy_vp):
+    np.save(("accuracy_x_" + name), accuracy_xp)
+    np.save(("accuracy_y_" + name), accuracy_yp)
+    np.save(("accuracy_u_" + name), accuracy_up)
+    np.save(("accuracy_v_" + name), accuracy_vp)
+
+
