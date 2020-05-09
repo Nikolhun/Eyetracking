@@ -127,7 +127,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
 
 
 def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates,
-                     interpolation_size, mask_bgr, coordinates_of_center):
+                     interpolation_size, mask_bgr, coordinates_of_center, hit_target, hit_target_value):
     """
     Visualize eyetracking
     :param coordinate_x: coordinate x
@@ -150,35 +150,30 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordin
 
     if mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and \
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
-            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] >= 11:
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] >= 153:
 
         mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] = \
-            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] - 10
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] - 2
+
+    elif mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] << 150:
+
+        print("menší, x, y, hodnota", np.abs(coordinate_x - (interpolation_size[1] - 1)), coordinate_y,
+              mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2])
+
+    elif coordinates_of_center[1] == np.abs(coordinate_x - (interpolation_size[1] - 1)) and \
+            coordinates_of_center[0] == coordinate_y:
+        hit_target = True
+        hit_target_value.append(hit_target)
+
     else:
         mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] = 0  # red color (0, 0, 255)
         mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] = 0
 
-    return coordinate_x, coordinate_y, mask_bgr
+    coordinate_x = np.abs(coordinate_x - (interpolation_size[1] - 1))  # coordinate x
 
-
-def accuracy_from_eyetracking(my_coordinates, vector_coordinates, result, accuracy_x, accuracy_y, accuracy_u, accuracy_v):
-    """
-    Counts accuracy of eyetracker.
-    :param my_coordinates:
-    :param vector_coordinates:
-    :param result:
-    :return:
-    """
-    x = int(np.abs(my_coordinates[0] - result[0]))
-    y = int(np.abs(my_coordinates[1] - result[1]))
-    u = round(np.abs(my_coordinates[2] - vector_coordinates[0]), 2)
-    v = round(np.abs(my_coordinates[3] - vector_coordinates[1]), 2)
-    accuracy_result = (x, y, u, v)
-    accuracy_x.append(x)
-    accuracy_y.append(y)
-    accuracy_u.append(u)
-    accuracy_v.append(v)
-    return accuracy_result, accuracy_x, accuracy_y, accuracy_u, accuracy_v
+    return coordinate_x, coordinate_y, mask_bgr, hit_target, hit_target_value
 
 
 def dimension(img_before, scale_percent):
@@ -196,10 +191,8 @@ def dimension(img_before, scale_percent):
 
 
 def change_coordinates_of_target(size_of_output_screen):
-    num_rows = random.randint(0 + int((3*100)/size_of_output_screen[0]),
-                              size_of_output_screen[0] - int((3*100)/size_of_output_screen[1]))
-    num_coll = random.randint(0 + int((3*100)/size_of_output_screen[0]),
-                              size_of_output_screen[1] - int((3*100)/size_of_output_screen[1]))
+    num_rows = random.randint(0, size_of_output_screen[0]-1)
+    num_coll = random.randint(0, size_of_output_screen[1]-1)
     coordinates_of_center_dot = (num_rows, num_coll)
     return coordinates_of_center_dot
 
@@ -210,10 +203,55 @@ def empty_mask_for_eyetracking(size_of_output_screen):
     return mask_for_eyetracking_bgr
 
 
-def saving_accuracy(name, accuracy_xp, accuracy_yp, accuracy_up, accuracy_vp):
-    np.save(("accuracy_x_" + name), accuracy_xp)
-    np.save(("accuracy_y_" + name), accuracy_yp)
-    np.save(("accuracy_u_" + name), accuracy_up)
-    np.save(("accuracy_v_" + name), accuracy_vp)
 
 
+
+def add_red_pixels(mask_for_eyetracking_bgr, x_of_red_pixel_before, y_of_red_pixel_before, value_red):
+    for i in range(0, len(x_of_red_pixel_before)):
+        mask_for_eyetracking_bgr[x_of_red_pixel_before[i]][y_of_red_pixel_before[i]][2] = value_red[i]
+    return mask_for_eyetracking_bgr
+
+
+def save_red_pixels(mask_for_eyetracking_bgr, coordinates_of_center_dot, size_of_output_screen, step):
+    x1_of_red_pixel_before = []
+    y1_of_red_pixel_before = []
+    value_red_1 = []
+    x2_of_red_pixel_before = []
+    y2_of_red_pixel_before = []
+    value_red_2 = []
+
+    for i in range(0, (int((3 * size_of_output_screen[1])/100) * 2) - 1):
+        b_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1] - step + i][coordinates_of_center_dot[0]][0]
+        g_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1] - step + i][coordinates_of_center_dot[0]][1]
+        r_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1] - step + i][coordinates_of_center_dot[0]][2]
+        if b_pixel == 0 and g_pixel == 0:
+            x1_of_red_pixel_before.append(coordinates_of_center_dot[1] - step + i)
+            y1_of_red_pixel_before.append(coordinates_of_center_dot[0])
+            value_red_1.append(r_pixel)
+
+    for y in range(0, (int((3 * size_of_output_screen[1])/100) * 2) - 1):
+        b_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0] - step + y][0]
+        g_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0] - step + y][1]
+        r_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0] - step + y][2]
+        if b_pixel == 0 and g_pixel == 0:
+            x2_of_red_pixel_before.append(coordinates_of_center_dot[1])
+            y2_of_red_pixel_before.append(coordinates_of_center_dot[0] - step + y)
+            value_red_2.append(r_pixel)
+
+    return x1_of_red_pixel_before, y1_of_red_pixel_before, value_red_1, \
+           x2_of_red_pixel_before, y2_of_red_pixel_before, value_red_2
+
+
+def draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, color):
+    cv2.line(mask_for_eyetracking_bgr, (coordinates_of_center_dot[0] - step, coordinates_of_center_dot[1]),
+             (coordinates_of_center_dot[0] + step, coordinates_of_center_dot[1]), color, 1)
+    cv2.line(mask_for_eyetracking_bgr, (coordinates_of_center_dot[0], coordinates_of_center_dot[1] - step),
+             (coordinates_of_center_dot[0], coordinates_of_center_dot[1] + step), color, 1)
+
+
+def make_array_from_vectors(target_coordinate_x, target_coordinate_y, measured_vector_true_u, measured_vector_true_v):
+
+    target_and_measured_vector_array = np.array([[target_coordinate_x], [target_coordinate_y],
+                                                 [measured_vector_true_u], [measured_vector_true_v]])
+
+    return target_and_measured_vector_array

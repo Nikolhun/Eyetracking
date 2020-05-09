@@ -10,7 +10,8 @@ from calibration import upper_left, upper_right, middle_screen, lower_left, lowe
     middle_right, middle_up, prepare_mask_for_calibration
 from interpolate import interpolation
 from eyetracking import find_closest_in_array, show_eyetracking, normalize_array, \
-    accuracy_from_eyetracking, dimension, change_coordinates_of_target, empty_mask_for_eyetracking, saving_accuracy
+    dimension, change_coordinates_of_target, empty_mask_for_eyetracking, saving_accuracy,\
+    save_red_pixels, add_red_pixels, draw_line, make_array_from_vectors, random_change_coordinates_of_target
 
 
 #######################################################################################################################
@@ -168,16 +169,24 @@ def main():
     press_s = True
     press_e = False
     k = 0
-    coordinates_of_center_dot = (int(size_of_output_screen[0]/2), int(size_of_output_screen[1]/2))
-    #coordinates_of_center_dot = (10, 10)
-    accuracy_xp = []
-    accuracy_yp = []
-    accuracy_up = []
-    accuracy_vp = []
-    accuracy_xn = []
-    accuracy_yn = []
-    accuracy_un = []
-    accuracy_vn = []
+    target = False
+    coordinates_of_center_dot = (int((20 * size_of_output_screen[0] - 1) / 100),
+                                 int((20 * size_of_output_screen[1] - 1) / 100))
+    draw_point_after_next_target = False
+    hit_target = False
+    hit_target_value = []
+    value_of_point = 0
+    result_eyetracker_coordinate_x = []
+    result_eyetracker_coordinate_y = []
+    result_eyetracker_found_u = []
+    result_eyetracker_found_v = []
+    target_coordinate_x = []
+    target_coordinate_y = []
+    measured_vector_true_u = []
+    measured_vector_true_v = []
+    part = 'one'
+
+
 # ---------------------------------- Get the video frame and prepare it for detection ------------------------------- #
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
@@ -453,55 +462,93 @@ def main():
                 result_y, result_diff = find_closest_in_array(normalized_u_interp, normalized_v_interp,
                                                              (normalized_u, normalized_v),
                                                              0.1, 0.1)  # find best vector in interpolated field
+# ---------------------------------- Change target after pressing n -------------------------------------------------- #
             if k == ord('n'):
-                cv2.circle(mask_for_eyetracking_bgr, coordinates_of_center_dot,
-                           int((3*100)/size_of_output_screen[0]), (255, 255, 255), -1)  # clear old circle
+            #    target = True
+            #if k == ord('m'):
+            #    target = False
+
+            #if target == True:
+                #step = int((3 * size_of_output_screen[1])/100)
+                step = 0
+
+                draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 255, 255))
+
+                if draw_point_after_next_target == True or hit_target == True:
+                    mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][0] = 0
+                    mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][1] = 0
+                    if draw_point_after_next_target == True and hit_target == False:
+
+                        mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] = value_of_point
+                        draw_point_after_next_target = False
+
+                    elif draw_point_after_next_target == False and hit_target == True:
+
+                        if 5*len(hit_target_value) >= 104:
+                            mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] = 151
+                        else:
+                            mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] = \
+                                255 - 5*len(hit_target_value)
+
+                    elif draw_point_after_next_target == True and hit_target == True:
+
+                        draw_point_after_next_target = False
+
+                        if value_of_point - 5*len(hit_target_value) << 151:
+                            mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] = 151
+                        else:
+                            mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] =\
+                                value_of_point - 5*len(hit_target_value)
+
                 coordinates_of_center_dot = change_coordinates_of_target(size_of_output_screen)  # get new center
-                cv2.circle(mask_for_eyetracking_bgr, coordinates_of_center_dot, int((3*100)/size_of_output_screen[0]),
-                           (255, 191, 0), -1)  # draw new circle
+                #coordinates_of_center_dot, part = change_coordinates_of_target(coordinates_of_center_dot,
+                     #                                                    size_of_output_screen, part)
+
+                hit_target_value = []
+                hit_target = False
+
+                if mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][0] == 0 and  \
+                    mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][1] == 0 and  \
+                    mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] >> 1:
+
+                    draw_point_after_next_target = True
+                    value_of_point = mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2]
+
+                draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 0, 0))
 
             # show eyetracking result in frame called 'Eyetracking'
             coor_x, coor_y, \
-            mask_for_eyetracking_bgr = show_eyetracking(result_x, result_y, "Eyetracking",
+            mask_for_eyetracking_bgr, hit_target, hit_target_value = show_eyetracking(result_x, result_y, "Eyetracking",
                                         (output_vector_in_eye_frame[0],
                                          output_vector_in_eye_frame[1]),
                                         size_of_output_screen,
-                                        mask_for_eyetracking_bgr, coordinates_of_center_dot)
+                                        mask_for_eyetracking_bgr, coordinates_of_center_dot,
+                                        hit_target, hit_target_value)
+
+# ---------------------------------- Saving results ----------------------------------------------------------------- #
+            dot_0 = coordinates_of_center_dot[1]
+            dot_1 = coordinates_of_center_dot[0]
+            u_found = normalized_u_interp[dot_0 - 1, dot_1 - 1]
+            v_found = normalized_v_interp[dot_0 - 1, dot_1 - 1]
+
+            result_eyetracker_coordinate_x.append(coor_x)
+            result_eyetracker_coordinate_y.append(coor_y)
+            result_eyetracker_found_u.append(u_found)
+            result_eyetracker_found_v.append(v_found)
+
+            target_coordinate_x.append(dot_0)
+            target_coordinate_y.append(dot_1)
+            measured_vector_true_u.append(normalized_u)
+            measured_vector_true_v.append(normalized_v)
 
 # ---------------------------------- Write video and show image ----------------------------------------------------- #
             mask_bgr_reshaped = cv2.resize(mask_for_eyetracking_bgr, mask_reshape_dimenstion,
                                            interpolation=cv2.INTER_NEAREST)
-            cv2.imwrite("output.jpg", mask_bgr_reshaped)
+            #cv2.imwrite("output.jpg", mask_bgr_reshaped)
 
             out_detection.write(frame)
             out_mask.write(mask_bgr_reshaped)
             cv2.imshow("Eyetracking", mask_bgr_reshaped)
-
-# ---------------------------------- Analyse, accuracy result, ... -------------------------------------------------- #
-            dot_0 = coordinates_of_center_dot[1]
-            dot_1 = coordinates_of_center_dot[0]
-
-            print("dot", dot_0, dot_1)
-            print("vysledek", np.abs(result_x - (size_of_output_screen[1] - 1)), result_y)
-
-            final_accuracy, accuracy_xp, accuracy_yp,\
-                accuracy_up, accuracy_vp = accuracy_from_eyetracking([dot_0, dot_1,
-                                                        normalized_u_interp[dot_0, dot_1],
-                                                        normalized_v_interp[dot_0, dot_1]],
-                                                       (normalized_u, normalized_v),
-                                                       (np.abs(result_x - (size_of_output_screen[1] - 1)), result_y),
-                                                         accuracy_xp, accuracy_yp, accuracy_up, accuracy_vp)
-            print("procenta", final_accuracy)
-
-            final_accuracy, accuracy_xn, accuracy_yn,\
-                accuracy_un, accuracy_vn = accuracy_from_eyetracking([dot_0, dot_1,
-                                                        u_interp[dot_0, dot_1],
-                                                        v_interp[dot_0, dot_1]],
-                                                       (output_vector_in_eye_frame[2], output_vector_in_eye_frame[3]),
-                                                       (np.abs(result_x - (size_of_output_screen[1] - 1)), result_y),
-                                                       accuracy_xn, accuracy_yn, accuracy_un, accuracy_vn)
-
-            print("cisla", final_accuracy)
 
 # ---------------------------------- Stop eyetracking --------------------------------------------------------------- #
         if k == ord('s') and not press_s:
@@ -522,8 +569,20 @@ def main():
             out_detection.release()
             out_mask.release()
             cv2.destroyAllWindows()
-            saving_accuracy("percentage", accuracy_xp, accuracy_yp, accuracy_up, accuracy_vp)
-            saving_accuracy("numbers", accuracy_xn, accuracy_yn, accuracy_un, accuracy_vn)
+
+            # make array from found and measured data
+            result_eyetracker_array = make_array_from_vectors(result_eyetracker_coordinate_x,
+                                                              result_eyetracker_coordinate_y,
+                                                              result_eyetracker_found_u,
+                                                              result_eyetracker_found_v)
+            target_and_measured_vector_array = make_array_from_vectors(target_coordinate_x,
+                                                                       target_coordinate_y,
+                                                                       measured_vector_true_u,
+                                                                       measured_vector_true_v)
+
+            # save measured and found data
+            np.save("result_eyetracker_array", result_eyetracker_array)
+            np.save("target_and_measured_vector_array", target_and_measured_vector_array)
             break
     cap.release()  # release recording and streaming videos
     out_detection.release()
