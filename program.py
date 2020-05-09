@@ -10,8 +10,8 @@ from calibration import upper_left, upper_right, middle_screen, lower_left, lowe
     middle_right, middle_up, prepare_mask_for_calibration
 from interpolate import interpolation
 from eyetracking import find_closest_in_array, show_eyetracking, normalize_array, \
-    dimension, change_coordinates_of_target, empty_mask_for_eyetracking, saving_accuracy,\
-    save_red_pixels, add_red_pixels, draw_line, make_array_from_vectors, random_change_coordinates_of_target
+    dimension, change_coordinates_of_target, empty_mask_for_eyetracking, \
+    save_red_pixels, add_red_pixels, draw_line, make_array_from_vectors
 
 
 #######################################################################################################################
@@ -550,6 +550,8 @@ def main():
             out_mask.write(mask_bgr_reshaped)
             cv2.imshow("Eyetracking", mask_bgr_reshaped)
 
+
+
 # ---------------------------------- Stop eyetracking --------------------------------------------------------------- #
         if k == ord('s') and not press_s:
             press_s = True
@@ -583,6 +585,7 @@ def main():
             # save measured and found data
             np.save("result_eyetracker_array", result_eyetracker_array)
             np.save("target_and_measured_vector_array", target_and_measured_vector_array)
+            np.save("eyetracker_screen", mask_bgr_reshaped)
             break
     cap.release()  # release recording and streaming videos
     out_detection.release()
