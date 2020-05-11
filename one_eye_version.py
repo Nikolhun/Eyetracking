@@ -1,15 +1,14 @@
 import cv2
 import dlib
 import ctypes
-import keyboard
 import numpy as np
-from one_eye_functions import eye_center, find_vector
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import delete_corneal_reflection
 from calibration import prepare_mask_for_calibration, lower_right, lower_left, upper_right, upper_left, middle_up,\
     middle_right, middle_left, middle_bottom, middle_screen
 from interpolate import interpolation
 from eyetracking import normalize_array, find_closest_in_array, show_eyetracking, accuracy_from_eyetracking
+import math
 
 
 
@@ -46,6 +45,26 @@ def nothing(x):
     '''
     pass
 
+
+def eye_center(position_in_frame, move_frame):
+    height, width = position_in_frame.shape
+    eye_center_coordinates_in_frame = (int(width/2), int(height/2))
+    eye_center_coordinates = (int(width/2 + move_frame[1]), int(height/2 + move_frame[0]))
+    return eye_center_coordinates_in_frame, eye_center_coordinates
+
+
+def find_vector(pupil_center, eye_center_coordinates):
+    x = pupil_center[0] - eye_center_coordinates[0]  # vector x
+    y = pupil_center[1] - eye_center_coordinates[1]  # vector y
+
+    if y == 0:
+        y = 0.000001
+
+    magnitude = math.sqrt(x * x + y * y)  # magnitude of vector
+    direction_radian = math.atan(x / y)  # direction in radians
+    direction = (direction_radian * 180) / math.pi  # from radians to degrees
+
+    return x, y, magnitude, direction
 
 #######################################################################################################################
 # ---------------------------------- Main --------------------------------------------------------------------------- #

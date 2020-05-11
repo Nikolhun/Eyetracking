@@ -249,9 +249,12 @@ def draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, color):
              (coordinates_of_center_dot[0], coordinates_of_center_dot[1] + step), color, 1)
 
 
-def make_array_from_vectors(target_coordinate_x, target_coordinate_y, measured_vector_true_u, measured_vector_true_v):
+def make_array_from_vectors(target_coordinate_x, target_coordinate_y, measured_vector_true_u_normalized,
+                            measured_vector_true_v_normalized, measured_vector_true_u, measured_vector_true_v):
 
     target_and_measured_vector_array = np.array([[target_coordinate_x], [target_coordinate_y],
+                                                 [measured_vector_true_u_normalized],
+                                                 [measured_vector_true_v_normalized],
                                                  [measured_vector_true_u], [measured_vector_true_v]])
 
     return target_and_measured_vector_array

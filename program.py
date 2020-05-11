@@ -178,10 +178,14 @@ def main():
     value_of_point = 0
     result_eyetracker_coordinate_x = []
     result_eyetracker_coordinate_y = []
+    result_eyetracker_found_u_normalized = []
+    result_eyetracker_found_v_normalized = []
     result_eyetracker_found_u = []
     result_eyetracker_found_v = []
     target_coordinate_x = []
     target_coordinate_y = []
+    measured_vector_true_u_normalized = []
+    measured_vector_true_v_normalized = []
     measured_vector_true_u = []
     measured_vector_true_v = []
     part = 'one'
@@ -528,27 +532,33 @@ def main():
 # ---------------------------------- Saving results ----------------------------------------------------------------- #
             dot_0 = coordinates_of_center_dot[1]
             dot_1 = coordinates_of_center_dot[0]
-            u_found = normalized_u_interp[dot_0 - 1, dot_1 - 1]
-            v_found = normalized_v_interp[dot_0 - 1, dot_1 - 1]
+            u_found_normalized = normalized_u_interp[dot_0 - 1, dot_1 - 1]
+            v_found_normalized = normalized_v_interp[dot_0 - 1, dot_1 - 1]
+            u_found = u_interp[dot_0 - 1, dot_1 - 1]
+            v_found = v_interp[dot_0 - 1, dot_1 - 1]
 
             result_eyetracker_coordinate_x.append(coor_x)
             result_eyetracker_coordinate_y.append(coor_y)
+            result_eyetracker_found_u_normalized.append(u_found_normalized)
+            result_eyetracker_found_v_normalized.append(v_found_normalized)
             result_eyetracker_found_u.append(u_found)
             result_eyetracker_found_v.append(v_found)
 
             target_coordinate_x.append(dot_0)
             target_coordinate_y.append(dot_1)
-            measured_vector_true_u.append(normalized_u)
-            measured_vector_true_v.append(normalized_v)
+            measured_vector_true_u_normalized.append(normalized_u)
+            measured_vector_true_v_normalized.append(normalized_v)
+            measured_vector_true_u.append(output_vector_in_eye_frame[2])
+            measured_vector_true_v.append(output_vector_in_eye_frame[3])
 
 # ---------------------------------- Write video and show image ----------------------------------------------------- #
-            mask_bgr_reshaped = cv2.resize(mask_for_eyetracking_bgr, mask_reshape_dimenstion,
+            mask_bgr_reshaped_nearest = cv2.resize(mask_for_eyetracking_bgr, mask_reshape_dimenstion,
                                            interpolation=cv2.INTER_NEAREST)
-            #cv2.imwrite("output.jpg", mask_bgr_reshaped)
+            #cv2.imwrite("result/output.jpg", mask_bgr_reshaped_nearest)
 
             out_detection.write(frame)
-            out_mask.write(mask_bgr_reshaped)
-            cv2.imshow("Eyetracking", mask_bgr_reshaped)
+            out_mask.write(mask_bgr_reshaped_nearest)
+            cv2.imshow("Eyetracking", mask_bgr_reshaped_nearest)
 
 
 
@@ -575,17 +585,23 @@ def main():
             # make array from found and measured data
             result_eyetracker_array = make_array_from_vectors(result_eyetracker_coordinate_x,
                                                               result_eyetracker_coordinate_y,
+                                                              result_eyetracker_found_u_normalized,
+                                                              result_eyetracker_found_v_normalized,
                                                               result_eyetracker_found_u,
                                                               result_eyetracker_found_v)
+
             target_and_measured_vector_array = make_array_from_vectors(target_coordinate_x,
                                                                        target_coordinate_y,
+                                                                       measured_vector_true_u_normalized,
+                                                                       measured_vector_true_v_normalized,
                                                                        measured_vector_true_u,
                                                                        measured_vector_true_v)
 
             # save measured and found data
-            np.save("result_eyetracker_array", result_eyetracker_array)
-            np.save("target_and_measured_vector_array", target_and_measured_vector_array)
-            np.save("eyetracker_screen", mask_bgr_reshaped)
+            np.save("results/result_eyetracker_array", result_eyetracker_array)
+            np.save("results/target_and_measured_vector_array", target_and_measured_vector_array)
+            np.save("results/eyetracker_screen_nearest", mask_bgr_reshaped_nearest)
+            np.save("results/eyetracker_screen", mask_for_eyetracking_bgr)
             break
     cap.release()  # release recording and streaming videos
     out_detection.release()
