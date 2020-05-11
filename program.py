@@ -9,11 +9,12 @@ from vector import find_vector
 from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left, \
     middle_right, middle_up, prepare_mask_for_calibration
 from interpolate import interpolation
-from eyetracking import find_closest_in_array, show_eyetracking, normalize_array, \
-    dimension, change_coordinates_of_target, empty_mask_for_eyetracking, \
-    save_red_pixels, add_red_pixels, draw_line, make_array_from_vectors
+from eyetracking import find_closest_in_array, show_eyetracking, normalize_array, dimension, \
+    empty_mask_for_eyetracking, make_array_from_vectors
+from make_target import change_coordinates_of_target, change_coordinates_of_target_random, draw_line,\
+    check_target_spot_before, check_target_spot_after
 
-
+speed_of_target = 3
 #######################################################################################################################
 # ------------------------------- Initiation part ------------------------------------------------------------------- #
 #######################################################################################################################
@@ -101,6 +102,7 @@ else:
     print("Choose between r for Raspberry or w for Windows.")
     size_of_output_screen = []
 
+
 #######################################################################################################################
 # ------------------------------- Creating trackbar ----------------------------------------------------------------- #
 #######################################################################################################################
@@ -120,6 +122,7 @@ def main():
     print("Press v to show calibrating vector.")
 
     mask_for_eyetracking_bgr = empty_mask_for_eyetracking(size_of_output_screen)
+    mask_bgr_reshaped_nearest = mask_for_eyetracking_bgr
     mask_reshape_dimenstion = dimension(mask_for_eyetracking_bgr,
                                         int((screensize[1] * 100) / size_of_output_screen[0]))
 
@@ -127,7 +130,6 @@ def main():
     fourcc_detection = cv2.VideoWriter_fourcc(*'XVID')
     out_detection = cv2.VideoWriter('detection.mkv', fourcc_detection, 20.0, (int(cap.get(3)), int(cap.get(4))))
     fourcc_mask = cv2.VideoWriter_fourcc(*'XVID')
-    #out_mask = cv2.VideoWriter('mask.mkv', fourcc_mask, 20.0, size_of_output_screen)
     out_mask = cv2.VideoWriter('mask.mkv', fourcc_mask, 20.0, mask_reshape_dimenstion)
 
 # ---------------------------------- Creating window for result and trackbars in it --------------------------------- #
@@ -154,6 +156,10 @@ def main():
     lower_left_corner = [0, 0, 0, 0]
     middle_bottom_corner = [0, 0, 0, 0]
     lower_right_corner = [0, 0, 0, 0]
+    ################################# opravit u_interp, v_interp
+    size_of_interpolated_map = 100
+    u_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
+    v_interp = np.zeros((size_of_interpolated_map, size_of_interpolated_map), np.uint8)
     press_v = False
     press_c = True
     press_1 = True
@@ -188,7 +194,9 @@ def main():
     measured_vector_true_v_normalized = []
     measured_vector_true_u = []
     measured_vector_true_v = []
-    part = 'one'
+    part = 1
+    acceptation_of_change = []
+    change_accepted = False
 
 
 # ---------------------------------- Get the video frame and prepare it for detection ------------------------------- #
@@ -423,7 +431,7 @@ def main():
 
 # ---------------------------------- Show calibration points and interpolate them ----------------------------------- #
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
-                lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
+                lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and\
                 middle_right_corner != [0, 0, 0, 0] and middle_up_corner != [0, 0, 0, 0] and \
                 middle_bottom_corner != [0, 0, 0, 0] and middle_left_corner != [0, 0, 0, 0] and \
                 send_calibration_data_state and k == 13 and not press_e:
@@ -466,63 +474,73 @@ def main():
                 result_y, result_diff = find_closest_in_array(normalized_u_interp, normalized_v_interp,
                                                              (normalized_u, normalized_v),
                                                              0.1, 0.1)  # find best vector in interpolated field
-# ---------------------------------- Change target after pressing n -------------------------------------------------- #
-            if k == ord('n'):
-            #    target = True
-            #if k == ord('m'):
-            #    target = False
-
-            #if target == True:
+# ---------------------------------- Change target after pressing m -------------------------------------------------- #
+            if k == ord('m'):
+                target = True
+            if target == True:
                 #step = int((3 * size_of_output_screen[1])/100)
                 step = 0
 
                 draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 255, 255))
 
-                if draw_point_after_next_target == True or hit_target == True:
-                    mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][0] = 0
-                    mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][1] = 0
-                    if draw_point_after_next_target == True and hit_target == False:
+                mask_for_eyetracking_bgr_out, draw_point_after_next_target,\
+                value_of_point = check_target_spot_before(draw_point_after_next_target, hit_target, mask_for_eyetracking_bgr,
+                                                   coordinates_of_center_dot, value_of_point, hit_target_value)
+                mask_for_eyetracking_bgr = mask_for_eyetracking_bgr_out
 
-                        mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] = value_of_point
-                        draw_point_after_next_target = False
+                # get new center
+                coordinates_of_center_dot_out, part_out, \
+                acceptation_of_change, change_accepted = change_coordinates_of_target(coordinates_of_center_dot,
+                                                                                      size_of_output_screen, part,
+                                                                                      change_accepted,
+                                                                                      acceptation_of_change)
+                coordinates_of_center_dot = coordinates_of_center_dot_out
+                if len(acceptation_of_change) == speed_of_target:
+                    change_accepted = True
+                    acceptation_of_change = []
+                part = part_out
 
-                    elif draw_point_after_next_target == False and hit_target == True:
-
-                        if 5*len(hit_target_value) >= 104:
-                            mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] = 151
-                        else:
-                            mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] = \
-                                255 - 5*len(hit_target_value)
-
-                    elif draw_point_after_next_target == True and hit_target == True:
-
-                        draw_point_after_next_target = False
-
-                        if value_of_point - 5*len(hit_target_value) << 151:
-                            mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] = 151
-                        else:
-                            mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] =\
-                                value_of_point - 5*len(hit_target_value)
-
-                coordinates_of_center_dot = change_coordinates_of_target(size_of_output_screen)  # get new center
-                #coordinates_of_center_dot, part = change_coordinates_of_target(coordinates_of_center_dot,
-                     #                                                    size_of_output_screen, part)
+                if part == 16:
+                    draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 255, 255))
+                    target = False
 
                 hit_target_value = []
                 hit_target = False
 
-                if mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][0] == 0 and  \
-                    mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][1] == 0 and  \
-                    mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2] >> 1:
-
-                    draw_point_after_next_target = True
-                    value_of_point = mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0]][2]
+                mask_for_eyetracking_bgr_out, draw_point_after_next_target,\
+                value_of_point = check_target_spot_after(mask_for_eyetracking_bgr, coordinates_of_center_dot)
+                mask_for_eyetracking_bgr = mask_for_eyetracking_bgr_out
 
                 draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 0, 0))
+# ---------------------------------- Random target after pressing n -------------------------------------------------- #
+            if k == ord('n'):
+                # step = int((3 * size_of_output_screen[1])/100)
+                step = 0
 
+                draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 255, 255))
+
+                mask_for_eyetracking_bgr_out, draw_point_after_next_target, \
+                value_of_point = check_target_spot_before(draw_point_after_next_target, hit_target,
+                                                          mask_for_eyetracking_bgr,
+                                                          coordinates_of_center_dot, value_of_point, hit_target_value)
+                mask_for_eyetracking_bgr = mask_for_eyetracking_bgr_out
+
+                # get new center
+                coordinates_of_center_dot = change_coordinates_of_target_random(size_of_output_screen)
+
+                hit_target_value = []
+                hit_target = False
+
+                mask_for_eyetracking_bgr_out, draw_point_after_next_target, \
+                value_of_point = check_target_spot_after(mask_for_eyetracking_bgr, coordinates_of_center_dot)
+                mask_for_eyetracking_bgr = mask_for_eyetracking_bgr_out
+
+                draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 0, 0))
+# ---------------------------------- Draw/show eyetracking ---------------------------------------------------------- #
             # show eyetracking result in frame called 'Eyetracking'
             coor_x, coor_y, \
-            mask_for_eyetracking_bgr, hit_target, hit_target_value = show_eyetracking(result_x, result_y, "Eyetracking",
+            mask_for_eyetracking_bgr, hit_target,\
+            hit_target_value = show_eyetracking(result_x, result_y, "Eyetracking",
                                         (output_vector_in_eye_frame[0],
                                          output_vector_in_eye_frame[1]),
                                         size_of_output_screen,
@@ -559,8 +577,6 @@ def main():
             out_detection.write(frame)
             out_mask.write(mask_bgr_reshaped_nearest)
             cv2.imshow("Eyetracking", mask_bgr_reshaped_nearest)
-
-
 
 # ---------------------------------- Stop eyetracking --------------------------------------------------------------- #
         if k == ord('s') and not press_s:

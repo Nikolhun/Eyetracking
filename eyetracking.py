@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
-import time
-import random
-import threading
+
 
 def normalize_array(array, value):
     '''
@@ -115,17 +113,6 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
     return result_numbers, result_x, result_y, result_diff
 
 
-#def make_bgr_mask(bf, gf, rf, size):
-#    mask_for_eyetracking = np.zeros((size[0], size[1]), np.uint8)
-#    mask_for_eyetracking = cv2.cvtColor(mask_for_eyetracking, cv2.COLOR_GRAY2BGR)
-#    b, g, r = cv2.split(mask_for_eyetracking)
-#    b[:, :] = bf
-#    g[:, :] = gf
-#    r[:, :] = rf
-#    mask_for_eyetracking_bgr = cv2.merge([b, g, r])
-#    return mask_for_eyetracking_bgr
-
-
 def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates,
                      interpolation_size, mask_bgr, coordinates_of_center, hit_target, hit_target_value):
     """
@@ -157,7 +144,7 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordin
 
     elif mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and \
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
-            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] << 150:
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] <= 150:
 
         print("menší, x, y, hodnota", np.abs(coordinate_x - (interpolation_size[1] - 1)), coordinate_y,
               mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2])
@@ -190,67 +177,29 @@ def dimension(img_before, scale_percent):
     return reshape_dimension
 
 
-def change_coordinates_of_target(size_of_output_screen):
-    num_rows = random.randint(0, size_of_output_screen[0]-1)
-    num_coll = random.randint(0, size_of_output_screen[1]-1)
-    coordinates_of_center_dot = (num_rows, num_coll)
-    return coordinates_of_center_dot
-
-
 def empty_mask_for_eyetracking(size_of_output_screen):
+    """
+    Makes empty mask for eyetracking.
+    :param size_of_output_screen: Screen size for example (16, 9)
+    :return: empty array for saving eyetraking
+    """
     mask_for_eyetracking = np.zeros((size_of_output_screen[1], size_of_output_screen[0]), np.uint8) + 255
     mask_for_eyetracking_bgr = cv2.cvtColor(mask_for_eyetracking, cv2.COLOR_GRAY2BGR)
     return mask_for_eyetracking_bgr
 
 
-
-
-
-def add_red_pixels(mask_for_eyetracking_bgr, x_of_red_pixel_before, y_of_red_pixel_before, value_red):
-    for i in range(0, len(x_of_red_pixel_before)):
-        mask_for_eyetracking_bgr[x_of_red_pixel_before[i]][y_of_red_pixel_before[i]][2] = value_red[i]
-    return mask_for_eyetracking_bgr
-
-
-def save_red_pixels(mask_for_eyetracking_bgr, coordinates_of_center_dot, size_of_output_screen, step):
-    x1_of_red_pixel_before = []
-    y1_of_red_pixel_before = []
-    value_red_1 = []
-    x2_of_red_pixel_before = []
-    y2_of_red_pixel_before = []
-    value_red_2 = []
-
-    for i in range(0, (int((3 * size_of_output_screen[1])/100) * 2) - 1):
-        b_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1] - step + i][coordinates_of_center_dot[0]][0]
-        g_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1] - step + i][coordinates_of_center_dot[0]][1]
-        r_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1] - step + i][coordinates_of_center_dot[0]][2]
-        if b_pixel == 0 and g_pixel == 0:
-            x1_of_red_pixel_before.append(coordinates_of_center_dot[1] - step + i)
-            y1_of_red_pixel_before.append(coordinates_of_center_dot[0])
-            value_red_1.append(r_pixel)
-
-    for y in range(0, (int((3 * size_of_output_screen[1])/100) * 2) - 1):
-        b_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0] - step + y][0]
-        g_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0] - step + y][1]
-        r_pixel = mask_for_eyetracking_bgr[coordinates_of_center_dot[1]][coordinates_of_center_dot[0] - step + y][2]
-        if b_pixel == 0 and g_pixel == 0:
-            x2_of_red_pixel_before.append(coordinates_of_center_dot[1])
-            y2_of_red_pixel_before.append(coordinates_of_center_dot[0] - step + y)
-            value_red_2.append(r_pixel)
-
-    return x1_of_red_pixel_before, y1_of_red_pixel_before, value_red_1, \
-           x2_of_red_pixel_before, y2_of_red_pixel_before, value_red_2
-
-
-def draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, color):
-    cv2.line(mask_for_eyetracking_bgr, (coordinates_of_center_dot[0] - step, coordinates_of_center_dot[1]),
-             (coordinates_of_center_dot[0] + step, coordinates_of_center_dot[1]), color, 1)
-    cv2.line(mask_for_eyetracking_bgr, (coordinates_of_center_dot[0], coordinates_of_center_dot[1] - step),
-             (coordinates_of_center_dot[0], coordinates_of_center_dot[1] + step), color, 1)
-
-
 def make_array_from_vectors(target_coordinate_x, target_coordinate_y, measured_vector_true_u_normalized,
                             measured_vector_true_v_normalized, measured_vector_true_u, measured_vector_true_v):
+    """
+    Make array from measured and found vectors to save results easily
+    :param target_coordinate_x: coordinate x of target
+    :param target_coordinate_y: coordinate y of target
+    :param measured_vector_true_u_normalized: normalized value of measured vector u
+    :param measured_vector_true_v_normalized: normalized value of measured vector v
+    :param measured_vector_true_u: value of measured vector u
+    :param measured_vector_true_v: value of measured vector v
+    :return: array of results containing all numbers above
+    """
 
     target_and_measured_vector_array = np.array([[target_coordinate_x], [target_coordinate_y],
                                                  [measured_vector_true_u_normalized],
