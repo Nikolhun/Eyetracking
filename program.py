@@ -547,10 +547,14 @@ def main():
 # ---------------------------------- Saving results ----------------------------------------------------------------- #
             dot_0 = coordinates_of_center_dot[1]
             dot_1 = coordinates_of_center_dot[0]
-            u_found_normalized = normalized_u_interp[dot_0 - 1, dot_1 - 1]
-            v_found_normalized = normalized_v_interp[dot_0 - 1, dot_1 - 1]
-            u_found = u_interp[dot_0 - 1, dot_1 - 1]
-            v_found = v_interp[dot_0 - 1, dot_1 - 1]
+            #u_found_normalized = normalized_u_interp[dot_0 - 1, dot_1 - 1]
+            #v_found_normalized = normalized_v_interp[dot_0 - 1, dot_1 - 1]
+            u_found_normalized = normalized_u_interp[coor_x, coor_y]
+            v_found_normalized = normalized_v_interp[coor_x, coor_y]
+            #u_found = u_interp[dot_0 - 1, dot_1 - 1]
+            #v_found = v_interp[dot_0 - 1, dot_1 - 1]
+            u_found = u_interp[coor_x, coor_y]
+            v_found = v_interp[coor_x, coor_y]
 
             if nothing_found == 1:
                 print("Vector can't be found.")

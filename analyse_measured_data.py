@@ -60,12 +60,12 @@ for i in range(0, (eyetracker_data.shape[2]-1)):
 
     elif eyetracker_data_x[0][i] == float(-1):
         unfined_vectors = unfined_vectors + 1
-        x0 = 0 #float(-1)
-        y0 = 0 #float(-1)
-        u0_normalized = 0 #float(-1)
-        v0_normalized = 0 #float(-1)
-        u0 = 0 #float(-1)
-        v0 = 0 #float(-1)
+        x0 = 0
+        y0 = 0
+        u0_normalized = 0
+        v0_normalized = 0
+        u0 = 0
+        v0 = 0
 
     x.append(x0)
     y.append(y0)
@@ -74,18 +74,15 @@ for i in range(0, (eyetracker_data.shape[2]-1)):
     u.append(u0)
     v.append(v0)
 
-#x = np.concatenate(x)
-#y = np.concatenate(y)
-#u_normalized = np.concatenate(u_normalized)
-#v_normalized = np.concatenate(v_normalized)
-#u = np.concatenate(u)
-#v = np.concatenate(v)
 x = np.array(x)
 y = np.array(y)
 u_normalized = np.array(u_normalized)
 v_normalized = np.array(v_normalized)
 u = np.array(u)
 v = np.array(v)
+u_normalized_percent = u_normalized*100
+v_normalized_percent = v_normalized*100
+
 # ---------------------------------- Save data ---------------------------------------------------------------------- #
 np.save("results/" + specification + "_accuracy_x", x)
 np.save("results/" + specification + "_accuracy_y", y)
@@ -102,12 +99,50 @@ data = {'X': x,
         'V': v,
         'U normalized': u_normalized,
         'V normalized': v_normalized,
-        'U percent': u_normalized*100,
-        'V percent': v_normalized*100}
-df = pd.DataFrame(data, columns=['X', 'Y', 'U', 'V', 'U normalized', 'V normalized', 'U percent', 'V percent'])
+        'U percent': u_normalized_percent,
+        'V percent': v_normalized_percent}
 
+
+df = pd.DataFrame(data, columns=['X', 'Y', 'U', 'V', 'U normalized', 'V normalized', 'U percent', 'V percent', '', '',
+                                 'Mean', 'Max'])
 writer = pd.ExcelWriter("results/" + specification + "_results.xlsx", engine='xlsxwriter')
 df.to_excel(writer, sheet_name='Sheet1')
+
+workbook = writer.book
+worksheet = writer.sheets['Sheet1']
+worksheet.set_column(1, 2, 7)
+worksheet.set_column(3, 10, 12)
+
+# Mean
+worksheet.write(1, 11, round(x.mean(), 2))
+worksheet.write(2, 11, round(y.mean(), 2))
+worksheet.write(3, 11, round(u.mean(), 2))
+worksheet.write(4, 11, round(v.mean(), 2))
+worksheet.write(5, 11, round(u_normalized.mean(), 2))
+worksheet.write(6, 11, round(v_normalized.mean(), 2))
+worksheet.write(7, 11, round((u_normalized*100).mean(), 2))
+worksheet.write(8, 11, round((v_normalized*100).mean(), 2))
+
+# Max
+worksheet.write(1, 12, round(x.max(), 2))
+worksheet.write(2, 12, round(y.max(), 2))
+worksheet.write(3, 12, round(u.max(), 2))
+worksheet.write(4, 12, round(v.max(), 2))
+worksheet.write(5, 12, round(u_normalized.max(), 2))
+worksheet.write(6, 12, round(v_normalized.max(), 2))
+worksheet.write(7, 12, round((u_normalized*100).max(), 2))
+worksheet.write(8, 12, round((v_normalized*100).max(), 2))
+
+# label
+worksheet.write(1, 10, 'X')
+worksheet.write(2, 10, 'Y')
+worksheet.write(3, 10, 'U')
+worksheet.write(4, 10, 'V')
+worksheet.write(5, 10, 'U norm')
+worksheet.write(6, 10, 'V norm')
+worksheet.write(7, 10, 'U percent')
+worksheet.write(8, 10, 'V percent')
+
 writer.save()
 writer.close()
 # ---------------------------------- Heat map ----------------------------------------------------------------------- #
