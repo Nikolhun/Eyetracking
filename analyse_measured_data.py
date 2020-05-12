@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import cv2
 import ctypes
 
+specification = "ver1"
+
 user32 = ctypes.windll.user32  # for windows
 screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
 #screensize = (120, 1280) rpi
@@ -44,14 +46,26 @@ u_normalized = []
 v_normalized = []
 u = []
 v = []
-for i in range(0, len(eyetracker_data[0])):
+unfined_vectors = 0
 
-    x0 = np.abs(eyetracker_data_x[i] - target_vector_data_x[i])
-    y0 = np.abs(eyetracker_data_y[i] - target_vector_data_y[i])
-    u0_normalized = np.abs(eyetracker_data_u_normalized[i] - target_vector_data_u_normalized[i])
-    v0_normalized = np.abs(eyetracker_data_v_normalized[i] - target_vector_data_v_normalized[i])
-    u0 = np.abs(eyetracker_data_u[i] - target_vector_data_u[i])
-    v0 = np.abs(eyetracker_data_v[i] - target_vector_data_v[i])
+for i in range(0, (eyetracker_data.shape[2]-1)):
+
+    if eyetracker_data_x[0][i] != float(-1):
+        x0 = np.abs(eyetracker_data_x[0][i] - target_vector_data_x[0][i])
+        y0 = np.abs(eyetracker_data_y[0][i] - target_vector_data_y[0][i])
+        u0_normalized = np.abs(eyetracker_data_u_normalized[0][i] - target_vector_data_u_normalized[0][i])
+        v0_normalized = np.abs(eyetracker_data_v_normalized[0][i] - target_vector_data_v_normalized[0][i])
+        u0 = np.abs(eyetracker_data_u[0][i] - target_vector_data_u[0][i])
+        v0 = np.abs(eyetracker_data_v[0][i] - target_vector_data_v[0][i])
+
+    elif eyetracker_data_x[0][i] == float(-1):
+        unfined_vectors = unfined_vectors + 1
+        x0 = 0 #float(-1)
+        y0 = 0 #float(-1)
+        u0_normalized = 0 #float(-1)
+        v0_normalized = 0 #float(-1)
+        u0 = 0 #float(-1)
+        v0 = 0 #float(-1)
 
     x.append(x0)
     y.append(y0)
@@ -60,22 +74,28 @@ for i in range(0, len(eyetracker_data[0])):
     u.append(u0)
     v.append(v0)
 
-x = np.concatenate(x)
-y = np.concatenate(y)
-u_normalized = np.concatenate(u_normalized)
-v_normalized = np.concatenate(v_normalized)
-u = np.concatenate(u)
-v = np.concatenate(v)
-
+#x = np.concatenate(x)
+#y = np.concatenate(y)
+#u_normalized = np.concatenate(u_normalized)
+#v_normalized = np.concatenate(v_normalized)
+#u = np.concatenate(u)
+#v = np.concatenate(v)
+x = np.array(x)
+y = np.array(y)
+u_normalized = np.array(u_normalized)
+v_normalized = np.array(v_normalized)
+u = np.array(u)
+v = np.array(v)
 # ---------------------------------- Save data ---------------------------------------------------------------------- #
-np.save("results/accuracy_x", x)
-np.save("results/accuracy_y", y)
-np.save("results/accuracy_u_normalized", u_normalized)
-np.save("results/accuracy_z_normalized", v_normalized)
-np.save("results/accuracy_u", u)
-np.save("results/accuracy_v", v)
+np.save("results/" + specification + "_accuracy_x", x)
+np.save("results/" + specification + "_accuracy_y", y)
+np.save("results/" + specification + "_accuracy_u_normalized", u_normalized)
+np.save("results/" + specification + "_accuracy_v_normalized", v_normalized)
+np.save("results/" + specification + "_accuracy_u", u)
+np.save("results/" + specification + "_accuracy_v", v)
 
 # ---------------------------------- Excel -------------------------------------------------------------------------- #
+
 data = {'X': x,
         'Y': y,
         'U': u,
@@ -86,7 +106,7 @@ data = {'X': x,
         'V percent': v_normalized*100}
 df = pd.DataFrame(data, columns=['X', 'Y', 'U', 'V', 'U normalized', 'V normalized', 'U percent', 'V percent'])
 
-writer = pd.ExcelWriter('results/results.xlsx', engine='xlsxwriter')
+writer = pd.ExcelWriter("results/" + specification + "_results.xlsx", engine='xlsxwriter')
 df.to_excel(writer, sheet_name='Sheet1')
 writer.save()
 writer.close()
@@ -97,13 +117,15 @@ midpoint_nearest = (eyetracker_screen_gray_nearest.max() - eyetracker_screen_gra
 heat_map_nearest = sb.heatmap(eyetracker_screen_gray_nearest, center=midpoint_nearest, vmin=0, vmax=1, xticklabels=False,
                               yticklabels=False, cmap="Blues", cbar=False)
 plt.show()
-figure_nearest = heat_map_nearest.get_figure().savefig('results/heat_map_nearest.png')
+figure_nearest = heat_map_nearest.get_figure().savefig("results/" + specification + "_heat_map_nearest.png")
 
 midpoint_cubic = (eyetracker_screen_gray.max() - eyetracker_screen_gray.min())/1.5
 heat_map_cubic = sb.heatmap(eyetracker_screen_gray, center=midpoint_nearest, vmin=0, vmax=1, xticklabels=False,
                             yticklabels=False, cmap="Blues", cbar=False)
 plt.show()
-figure_cubic = heat_map_cubic.get_figure().savefig('results/heat_map_cubic.png') #dpi = 400
+figure_cubic = heat_map_cubic.get_figure().savefig("results/" + specification + "_heat_map_cubic.png") #dpi = 400
+
+print("In this measurement was", unfined_vectors, "not found vectors.")
 
 
 

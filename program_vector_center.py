@@ -473,7 +473,7 @@ def main():
             normalized_v_interp, normalized_v = normalize_array(v_interp, output_vector_in_eye_frame[3])  # normalize v
 
             result_numbers, result_x,\
-            result_y, result_diff = find_closest_in_array(normalized_u_interp, normalized_v_interp,
+            result_y, result_diff, nothing_found = find_closest_in_array(normalized_u_interp, normalized_v_interp,
                                                           (normalized_u, normalized_v),
                                                           0.1, 0.1)  # find best vector in interpolated field
 
@@ -544,10 +544,7 @@ def main():
 # ---------------------------------- Draw/show eyetracking ---------------------------------------------------------- #
             coor_x, coor_y, \
             mask_for_eyetracking_bgr, hit_target, \
-            hit_target_value = show_eyetracking(result_x, result_y, "Eyetracking",
-                                                (output_vector_in_eye_frame[0],
-                                                 output_vector_in_eye_frame[1]),
-                                                size_of_output_screen,
+            hit_target_value = show_eyetracking(result_x, result_y, "Eyetracking", size_of_output_screen,
                                                 mask_for_eyetracking_bgr, coordinates_of_center_dot,
                                                 hit_target, hit_target_value)
 
@@ -558,6 +555,22 @@ def main():
             v_found_normalized = normalized_v_interp[dot_0 - 1, dot_1 - 1]
             u_found = u_interp[dot_0 - 1, dot_1 - 1]
             v_found = v_interp[dot_0 - 1, dot_1 - 1]
+
+            if nothing_found == 1:
+                print("Vector can't be found.")
+                coor_x = -1
+                coor_y = -1
+                u_found_normalized = -1
+                v_found_normalized = -1
+                u_found = -1
+                v_found = -1
+
+                dot_0 = -1
+                dot_1 = -1
+                normalized_u = -1
+                normalized_v = -1
+                output_vector_in_eye_frame[2] = -1
+                output_vector_in_eye_frame[3] = -1
 
             result_eyetracker_coordinate_x.append(coor_x)
             result_eyetracker_coordinate_y.append(coor_y)

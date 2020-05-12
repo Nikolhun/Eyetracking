@@ -3,44 +3,42 @@ import numpy as np
 
 
 def normalize_array(array, value):
-    '''
+    """
     Normalize array to have values 0-1.
     :param array: array you want to normalize
     :param value: value you want to normalize
     :return: normalized_array, normlaized_value
-    '''
+    """
     normlaized_value = value / array.max()
     normalized_array = array / array.max()
     return normalized_array, normlaized_value
 
 
-def difference_value(u_interpolated_array, v_interpolated_array):
-    '''
-    Get maximum difference value for function find_closest_in_array
-    :param u_interpolated_array: u vector parameter (magnitude)
-    :param v_interpolated_array: v vector parameter (direction)
-    :return: max_difference_u, max_difference_v
-    '''
-    # max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/30
-    # max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/20
-    max_difference_u = u_interpolated_array.max()
-    max_difference_v = v_interpolated_array.max()
-    print("difference", max_difference_u, max_difference_v)
-    return max_difference_u, max_difference_v
+#def difference_value(u_interpolated_array, v_interpolated_array):
+  #  """
+  #  Get maximum difference value for function find_closest_in_array
+  #  :param u_interpolated_array: u vector parameter (magnitude)
+ #   :param v_interpolated_array: v vector parameter (direction)
+ #   :return: max_difference_u, max_difference_v
+  #  """
+  #  # max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/30
+  #  # max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/20
+ #   max_difference_u = u_interpolated_array.max()/2
+ #   max_difference_v = v_interpolated_array.max()/2
+#    print("difference", max_difference_u, max_difference_v)
+ #   return max_difference_u, max_difference_v
 
 
 def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max_difference_u, max_difference_v):
-    '''
+    """
     Finds the most accurate vector in u, v vector field.
     :param u_interpolated_array: interpolated u field/array of vectors
     :param v_interpolated_array: interpolated v field/array of vectors
     :param value: (x, y) value
     :param max_difference_u: from function difference_value
     :param max_difference_v: from function difference_value
-    :return: result_numbers, result_x, result_y, result_diff
-    '''
-
-    # img[np.where(img == (0.4, 0.4, 0.4))] = (0.54, 0.27, 0.27)
+    :return: result_numbers, result_x, result_y, result_diff, nothing found
+    """
 
     result_numbers = 0
     result_x = 0
@@ -52,6 +50,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
         u_best_number_x = []
         u_best_number_y = []
         u_best_number_diff = []
+        nothing_found = 0
 
         for i in range(0, u_interpolated_array.shape[0]):
             for y in range(0, u_interpolated_array.shape[1]):
@@ -79,7 +78,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
                     v_best_number_diff.append(diff)
 
         if v_best_numbers == [] and v_best_number_x == [] and v_best_number_y == [] and v_best_number_diff == []:
-            print("Difference is to small to find some position. Change the difference.")
+            nothing_found = 1
         else:
             u2 = np.zeros(u_interpolated_array.shape, np.float32)
             v2 = np.zeros(v_interpolated_array.shape, np.float32)
@@ -110,28 +109,20 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
 
     else:
         print("ERROR...u and v interpolated vectors should have the same size.")
-    return result_numbers, result_x, result_y, result_diff
+    return result_numbers, result_x, result_y, result_diff, nothing_found
 
 
-def show_eyetracking(coordinate_x, coordinate_y, window_name, vector_end_coordinates,
-                     interpolation_size, mask_bgr, coordinates_of_center, hit_target, hit_target_value):
+def show_eyetracking(coordinate_x, coordinate_y, window_name, interpolation_size, mask_bgr,
+                     coordinates_of_center, hit_target, hit_target_value):
     """
     Visualize eyetracking
     :param coordinate_x: coordinate x
     :param coordinate_y: coordinate y
     :param window_name: window name in string
-    :param vector_end_coordinates: x and y coordinate from vector function
     :param interpolation_size: interpolation size (x,y)
     :param mask_bgr: output in rgb
     :return:
     """
-
-    # get start points (point where is pupil when looking into the middle of the screen)
-    start_point = (int(interpolation_size[0] / 2), int(interpolation_size[1] / 2))
-    # get end point (point where the middle of pupil is * 10)
-    end_point = (int(vector_end_coordinates[0] * 10 + start_point[0]),
-                 int(vector_end_coordinates[1] * 10 + start_point[1]))
-
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)  # make new window with window name
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
 
