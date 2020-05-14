@@ -112,7 +112,7 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
     return result_numbers, result_x, result_y, result_diff, nothing_found
 
 
-def show_eyetracking(coordinate_x, coordinate_y, window_name, interpolation_size, mask_bgr,
+def show_eyetracking(coordinate_x, coordinate_y, interpolation_size, mask_bgr,
                      coordinates_of_center, hit_target, hit_target_value):
     """
     Visualize eyetracking
@@ -123,9 +123,6 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, interpolation_size
     :param mask_bgr: output in rgb
     :return:
     """
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)  # make new window with window name
-    cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
-
     if mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and \
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] >= 153:
@@ -137,8 +134,7 @@ def show_eyetracking(coordinate_x, coordinate_y, window_name, interpolation_size
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] <= 150:
 
-        print("menší, x, y, hodnota", np.abs(coordinate_x - (interpolation_size[1] - 1)), coordinate_y,
-              mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2])
+        print("Value of red is lower than 150.")
 
     elif coordinates_of_center[1] == np.abs(coordinate_x - (interpolation_size[1] - 1)) and \
             coordinates_of_center[0] == coordinate_y:
@@ -198,3 +194,4 @@ def make_array_from_vectors(target_coordinate_x, target_coordinate_y, measured_v
                                                  [measured_vector_true_u], [measured_vector_true_v]])
 
     return target_and_measured_vector_array
+

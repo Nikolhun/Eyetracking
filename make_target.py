@@ -1,5 +1,8 @@
 import cv2
 import random
+import seaborn as sb
+import matplotlib.pyplot as plt
+import numpy as np
 
 def check_target_spot_before(draw_point_after_next_target, hit_target, mask_for_eyetracking_bgr, coordinates_of_center_dot,
                       value_of_point, hit_target_value):
@@ -217,3 +220,32 @@ def change_coordinates_of_target(coordinates_of_center_dot, size_of_output_scree
     if coordinates_of_center_dot_output == coordinates_of_center_dot:
         acceptation_of_change.append(1)
     return coordinates_of_center_dot_output, part_out, acceptation_of_change, change_accepted
+
+
+
+def heat_map(eyetracker_screen_bgr, screensize, name):
+    plt.rcParams['figure.figsize'] = (16, 9)
+    eyetracker_screen_bgr = cv2.resize(eyetracker_screen_bgr, screensize,
+                                      interpolation=cv2.INTER_CUBIC)
+    eyetracker_screen_gray = cv2.cvtColor(eyetracker_screen_bgr, cv2.COLOR_BGR2GRAY)
+    eyetracker_screen_gray = eyetracker_screen_gray / eyetracker_screen_gray.max()
+    eyetracker_screen_gray = np.abs(eyetracker_screen_gray - 1)
+    eyetracker_screen_gray = eyetracker_screen_gray * eyetracker_screen_gray
+
+    midpoint_cubic = (eyetracker_screen_gray.max() - eyetracker_screen_gray.min()) / 1.5
+    heat_map_cubic = sb.heatmap(eyetracker_screen_gray, center=midpoint_cubic, vmin=0, vmax=1, xticklabels=False,
+                                yticklabels=False, cmap="Blues", cbar=False)
+    plt.show()
+    figure_cubic = heat_map_cubic.get_figure().savefig("results/heat_map_" + name + ".png")  # dpi = 400
+
+
+def show_target(size_of_output_screen, mask_bgr, coordinates_of_center_dot):
+
+    coor_x_target = coordinates_of_center_dot[1]
+    coor_y_target = coordinates_of_center_dot[0]
+
+    mask_bgr[np.abs(coor_x_target)][coor_y_target][0] = 255
+    mask_bgr[np.abs(coor_x_target)][coor_y_target][1] = 0
+    mask_bgr[np.abs(coor_x_target)][coor_y_target][2] = 0
+
+    return coor_x_target, coor_y_target, mask_bgr

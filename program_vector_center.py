@@ -30,74 +30,50 @@ if computer == "r":
     print("You have chosen Raspberry.")
     screensize = (120, 1280)
     print("Choose resolution of your eyetraker.")
-    print("a) 1280 x 720")
-    print("b) 640 x 360")
-    print("c) 320 x 180")
-    print("d) 160 x 90")
-    print("e) 80 x 45")
-    print("f) 16 x 9")
+    print("a) 160 x 90")
+    print("b) 80 x 45")
+    print("c) 16 x 9")
     eyetracker_resolution = input()
     if eyetracker_resolution == "a":
-        print("You have chosen resolution 1280 x 720.")
-        size_of_output_screen = (1280, 720)
-    elif eyetracker_resolution == "b":
-        print("You have chosen resolution 640 x 360.")
-        size_of_output_screen = (640, 360)
-    elif eyetracker_resolution == "c":
-        print("You have chosen resolution 320 x 180.")
-        size_of_output_screen = (320, 180)
-    elif eyetracker_resolution == "d":
         print("You have chosen resolution 160 x 90.")
         size_of_output_screen = (160, 90)
-    elif eyetracker_resolution == "e":
+    elif eyetracker_resolution == "b":
         print("You have chosen resolution 80 x 45.")
         size_of_output_screen = (80, 45)
-    elif eyetracker_resolution == "f":
+    elif eyetracker_resolution == "c":
         print("You have chosen resolution 16 x 9.")
         size_of_output_screen = (16, 9)
     else:
-        print("Choose between a to f.")
+        print("Choose between a to c.")
         size_of_output_screen = []
 elif computer == "w":
     print("You have chosen Windows")
     user32 = ctypes.windll.user32  # for windows
     screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
     print("Choose resolution of your eyetraker.")
-    print("a) 1536 x 864")
-    print("b) 768 x 432")
-    print("c) 384 x 216")
-    print("d) 192 x 108")
-    print("e) 96 x 54")
-    print("f) 48 x 27")
-    print("g) 48 x 27")
-    print("h) 16 x 9")
+    print("a) 192 x 108")
+    print("b) 96 x 54")
+    print("c) 48 x 27")
+    print("d) 48 x 27")
+    print("e) 16 x 9")
     eyetracker_resolution = input()
     if eyetracker_resolution == "a":
-        print("You have chosen resolution 1536 x 864.")
-        size_of_output_screen = (1536, 864)
-    elif eyetracker_resolution == "b":
-        print("You have chosen resolution 768 x 432.")
-        size_of_output_screen = (768, 432)
-    elif eyetracker_resolution == "c":
-        print("You have chosen resolution 384 x 216.")
-        size_of_output_screen = (384, 216)
-    elif eyetracker_resolution == "d":
         print("You have chosen resolution 192 x 108.")
         size_of_output_screen = (192, 108)
-    elif eyetracker_resolution == "e":
+    elif eyetracker_resolution == "b":
         print("You have chosen resolution 96 x 54.")
         size_of_output_screen = (96, 54)
-    elif eyetracker_resolution == "f":
+    elif eyetracker_resolution == "c":
         print("You have chosen resolution 48 x 27.")
         size_of_output_screen = (48, 27)
-    elif eyetracker_resolution == "g":
-        print("You have chosen resolution 48 x 27.")
+    elif eyetracker_resolution == "d":
+        print("You have chosen resolution 32 x 18.")
         size_of_output_screen = (32, 17)
-    elif eyetracker_resolution == "h":
+    elif eyetracker_resolution == "e":
         print("You have chosen resolution 16 x 9.")
         size_of_output_screen = (16, 9)
     else:
-        print("Choose between a to h.")
+        print("Choose between a to e.")
         size_of_output_screen = []
 else:
     print("Choose between r for Raspberry or w for Windows.")
@@ -551,10 +527,10 @@ def main():
 # ---------------------------------- Saving results ----------------------------------------------------------------- #
             dot_0 = coordinates_of_center_dot[1]
             dot_1 = coordinates_of_center_dot[0]
-            u_found_normalized = normalized_u_interp[dot_0 - 1, dot_1 - 1]
-            v_found_normalized = normalized_v_interp[dot_0 - 1, dot_1 - 1]
-            u_found = u_interp[dot_0 - 1, dot_1 - 1]
-            v_found = v_interp[dot_0 - 1, dot_1 - 1]
+            u_found_normalized = normalized_u_interp[coor_x, coor_y]
+            v_found_normalized = normalized_v_interp[coor_x, coor_y]
+            u_found = u_interp[coor_x, coor_y]
+            v_found = v_interp[coor_x, coor_y]
 
             if nothing_found == 1:
                 print("Vector can't be found.")

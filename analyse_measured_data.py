@@ -9,6 +9,7 @@ specification = "ver1"
 
 user32 = ctypes.windll.user32  # for windows
 screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
+print(screensize)
 #screensize = (120, 1280) rpi
 # ---------------------------------- Import measured data ----------------------------------------------------------- #
 eyetracker_data = np.load('results/result_eyetracker_array.npy')
@@ -18,6 +19,7 @@ eyetracker_screen_bgr_nearest = np.load('results/eyetracker_screen_nearest.npy')
 eyetracker_screen_gray_nearest = cv2.cvtColor(eyetracker_screen_bgr_nearest, cv2.COLOR_BGR2GRAY)
 eyetracker_screen_gray_nearest = eyetracker_screen_gray_nearest / eyetracker_screen_gray_nearest.max()
 eyetracker_screen_gray_nearest = np.abs(eyetracker_screen_gray_nearest - 1)
+eyetracker_screen_gray_nearest = eyetracker_screen_gray_nearest * eyetracker_screen_gray_nearest
 
 eyetracker_screen_bgr = np.load('results/eyetracker_screen.npy')
 eyetracker_screen_bgr = cv2.resize(eyetracker_screen_bgr, screensize,
@@ -25,6 +27,7 @@ eyetracker_screen_bgr = cv2.resize(eyetracker_screen_bgr, screensize,
 eyetracker_screen_gray = cv2.cvtColor(eyetracker_screen_bgr, cv2.COLOR_BGR2GRAY)
 eyetracker_screen_gray = eyetracker_screen_gray / eyetracker_screen_gray.max()
 eyetracker_screen_gray = np.abs(eyetracker_screen_gray - 1)
+eyetracker_screen_gray = eyetracker_screen_gray*eyetracker_screen_gray
 
 eyetracker_data_x = eyetracker_data[0]
 eyetracker_data_y = eyetracker_data[1]
@@ -146,6 +149,12 @@ worksheet.write(8, 10, 'V percent')
 writer.save()
 writer.close()
 # ---------------------------------- Heat map ----------------------------------------------------------------------- #
+target_save = np.load('results/eyetracker_target.npy')
+mask_for_eyetracking = np.load('results/eyetracker_screen.npy')
+cv2.imshow("mask", mask_for_eyetracking)
+cv2.imshow("target", target_save)
+
+
 plt.rcParams['figure.figsize'] = (16, 9)
 
 midpoint_nearest = (eyetracker_screen_gray_nearest.max() - eyetracker_screen_gray_nearest.min())/1.5
@@ -155,7 +164,7 @@ plt.show()
 figure_nearest = heat_map_nearest.get_figure().savefig("results/" + specification + "_heat_map_nearest.png")
 
 midpoint_cubic = (eyetracker_screen_gray.max() - eyetracker_screen_gray.min())/1.5
-heat_map_cubic = sb.heatmap(eyetracker_screen_gray, center=midpoint_nearest, vmin=0, vmax=1, xticklabels=False,
+heat_map_cubic = sb.heatmap(eyetracker_screen_gray, center=midpoint_cubic, vmin=0, vmax=1, xticklabels=False,
                             yticklabels=False, cmap="Blues", cbar=False)
 plt.show()
 figure_cubic = heat_map_cubic.get_figure().savefig("results/" + specification + "_heat_map_cubic.png") #dpi = 400
