@@ -26,29 +26,34 @@ print("Welcome in Eyetracking application!")
 user32 = ctypes.windll.user32  # for windows
 screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
 print("Choose resolution of your eyetraker.")
-print("a) 80 x 45")
-print("b) 48 x 27")
-print("c) 32 x 18")
-print("d) 16 x 9")
+print("a) 32 x 18")
+print("b) 16 x 9")
+print("c) 11 x 4")
+print("d) 9 x 2")
+print("e) 8 x 1")
 eyetracker_resolution = input()
 if eyetracker_resolution == "a":
-    print("You have chosen resolution 80 x 45.")
-    size_of_output_screen = (80, 45)
-    speed_of_target = 1
-elif eyetracker_resolution == "b":
-    print("You have chosen resolution 48 x 27.")
-    size_of_output_screen = (48, 27)
-    speed_of_target = 1
-elif eyetracker_resolution == "c":
     print("You have chosen resolution 32 x 18.")
     size_of_output_screen = (32, 18)
     speed_of_target = 2
-elif eyetracker_resolution == "d":
+elif eyetracker_resolution == "b":
     print("You have chosen resolution 16 x 9.")
     size_of_output_screen = (16, 9)
     speed_of_target = 3
+elif eyetracker_resolution == "c":
+    print("You have chosen resolution 11 x 4.")
+    size_of_output_screen = (11, 4)
+    speed_of_target = 4
+elif eyetracker_resolution == "d":
+    print("You have chosen resolution 9 x 2.")
+    size_of_output_screen = (9, 2)
+    speed_of_target = 5
+elif eyetracker_resolution == "e":
+    print("You have chosen resolution 8 x 1.")
+    size_of_output_screen = (8, 1)
+    speed_of_target = 6
 else:
-    print("Choose between a to d.")
+    print("Choose between a to e.")
     size_of_output_screen = []
 
 #######################################################################################################################
@@ -151,8 +156,8 @@ def main():
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
+        #frame = frame[::4, ::4]  # for rpi
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # change color from rgb to gray
-        # gray = gray[::4, ::4]  # for rpi
 
 # ---------------------------------- Dlib Landmark face detection --------------------------------------------------- #
         faces = detector_dlib(gray)

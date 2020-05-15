@@ -123,16 +123,26 @@ def show_eyetracking(coordinate_x, coordinate_y, interpolation_size, mask_bgr,
     :param mask_bgr: output in rgb
     :return:
     """
-    if mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and \
-            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
-            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] >= 153:
+
+    if mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] >= 5 and \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] >= 5 and \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] == 255:
+
+        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] =\
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] - 5
+        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] =\
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] - 5
+
+    elif mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] <= 5 and \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] <= 5 and \
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] >= 120:
 
         mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] = \
-            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] - 2
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] - 5
 
     elif mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] == 0 and \
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
-            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] <= 150:
+            mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] <= 115:
 
         print("Value of red is lower than 150.")
 
@@ -141,9 +151,9 @@ def show_eyetracking(coordinate_x, coordinate_y, interpolation_size, mask_bgr,
         hit_target = True
         hit_target_value.append(hit_target)
 
-    else:
-        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] = 0  # red color (0, 0, 255)
-        mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] = 0
+    #else:
+     #   mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] = 0  # red color (0, 0, 255)
+      #  mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] = 0
 
     coordinate_x = np.abs(coordinate_x - (interpolation_size[1] - 1))  # coordinate x
 

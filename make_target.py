@@ -230,7 +230,7 @@ def heat_map(eyetracker_screen_bgr, screensize, name):
     eyetracker_screen_gray = cv2.cvtColor(eyetracker_screen_bgr, cv2.COLOR_BGR2GRAY)
     eyetracker_screen_gray = eyetracker_screen_gray / eyetracker_screen_gray.max()
     eyetracker_screen_gray = np.abs(eyetracker_screen_gray - 1)
-    eyetracker_screen_gray = eyetracker_screen_gray * eyetracker_screen_gray
+    #eyetracker_screen_gray = eyetracker_screen_gray * eyetracker_screen_gray
 
     midpoint_cubic = (eyetracker_screen_gray.max() - eyetracker_screen_gray.min()) / 1.5
     heat_map_cubic = sb.heatmap(eyetracker_screen_gray, center=midpoint_cubic, vmin=0, vmax=1, xticklabels=False,
