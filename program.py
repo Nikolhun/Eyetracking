@@ -88,7 +88,6 @@ def main():
     cv2.createTrackbar('Left', 'Dlib Landmarks', 0, 255, nothing)  # threshold track bar
 
 # ---------------------------------- Initiation part ---------------------------------------------------------------- #
-    #mask_for_eyetracking_bgr = empty_mask_for_eyetracking(size_of_output_screen)
     left_center_pupil_in_eye_frame = [0, 0]
     right_center_pupil_in_eye_frame = [0, 0]
     output_vector_in_eye_frame = [0, 0, 0, 0]
@@ -106,8 +105,6 @@ def main():
     lower_left_corner = [0, 0, 0, 0]
     middle_bottom_corner = [0, 0, 0, 0]
     lower_right_corner = [0, 0, 0, 0]
-    ################################# opravit u_interp, v_interp
-    #size_of_interpolated_map = 100
     u_interp = np.zeros(size_of_output_screen, np.uint8)
     v_interp = np.zeros(size_of_output_screen, np.uint8)
     press_v = False
@@ -149,7 +146,6 @@ def main():
     acceptation_of_change = []
     change_accepted = False
     method = "n"
-
 
 # ---------------------------------- Get the video frame and prepare it for detection ------------------------------- #
     while cap.isOpened():  # while th video capture is
@@ -432,7 +428,6 @@ def main():
                 result_y, result_diff, nothing_found = find_closest_in_array(normalized_u_interp, normalized_v_interp,
                                                                              (normalized_u, normalized_v),
                                                                              0.2, 0.2)
-
 # ---------------------------------- Change target after pressing m -------------------------------------------------- #
             if k == ord('m'):
                 print("Target mode activated.")
@@ -460,12 +455,12 @@ def main():
 
                 if part == 16:
                     draw_line(mask_for_eyetracking_target, coordinates_of_center_dot, step, (255, 255, 255))
-                    #target = False
 
                 hit_target_value = []
                 hit_target = False
 
                 draw_line(mask_for_eyetracking_target, coordinates_of_center_dot, step, (255, 0, 0))
+
 # ---------------------------------- Random target after pressing n -------------------------------------------------- #
             if k == ord('n') and press_n == False:
                 mask_for_eyetracking_bgr = empty_mask_for_eyetracking(size_of_output_screen)
@@ -474,7 +469,6 @@ def main():
                 print("Target mode activated.")
                 print("Press n for next target.")
                 method = "n"
-                # step = int((3 * size_of_output_screen[1])/100)
                 step = 0
 
                 draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 255, 255))
@@ -520,10 +514,8 @@ def main():
 # ---------------------------------- Saving results ----------------------------------------------------------------- #
             dot_0 = coordinates_of_center_dot[1]
             dot_1 = coordinates_of_center_dot[0]
-
             u_found_normalized = normalized_u_interp[coor_x, coor_y]
             v_found_normalized = normalized_v_interp[coor_x, coor_y]
-
             u_found = u_interp[coor_x, coor_y]
             v_found = v_interp[coor_x, coor_y]
 
@@ -580,6 +572,8 @@ def main():
             cv2.destroyWindow("Target")
             mask_for_eyetracking_bgr = empty_mask_for_eyetracking(size_of_output_screen)
             mask_for_eyetracking_target = empty_mask_for_eyetracking(size_of_output_screen)
+            mask_for_eyetracking_target_save = empty_mask_for_eyetracking(size_of_output_screen)
+
             print("Eyetracker stops...")
 
 # ---------------------------------- Show result and keyboard check ------------------------------------------------- #
