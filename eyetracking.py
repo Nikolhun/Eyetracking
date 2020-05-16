@@ -144,7 +144,7 @@ def show_eyetracking(coordinate_x, coordinate_y, interpolation_size, mask_bgr,
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] == 0 and \
             mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][2] <= 115:
 
-        print("Value of red is lower than 150.")
+        print("Value of red is lower than 115.")
 
     elif coordinates_of_center[1] == np.abs(coordinate_x - (interpolation_size[1] - 1)) and \
             coordinates_of_center[0] == coordinate_y:
