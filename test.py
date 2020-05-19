@@ -1,11 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 #######################################################################################################################
-specification = "9x2_M_F_1_34"
-max_rozliseni_y = 9
+specification = "16x9_R_N_2_9"
+max_rozliseni_y = 16
 #######################################################################################################################
-
+path = r'C:\Users\notebook\Desktop\Eyetracking\grafy\16x9_R_N_2_9'
+if not os.path.exists(path):
+    os.makedirs(path)
 target = np.load("mereni/" + specification + "/target_and_measured_vector_array.npy")
 eyetracker = np.load("mereni/" + specification + "/result_eyetracker_array.npy")
 
@@ -40,43 +43,43 @@ t_y = np.linspace(0, len(target_y[0]), num=len(target_y[0]))
 t_x_no_0 = np.linspace(0, len(target_x_append), num=len(target_x_append))
 t_y_no_0 = np.linspace(0, len(target_y_append), num=len(target_y_append))
 
-plt.plot(t_y_no_0[10:len(t_y_no_0) - 10], target_y_append[10:len(target_y_append) - 10], 'b')
 plt.plot(t_y_no_0[10:len(t_y_no_0) - 10], eyetracker_y_append[10:len(eyetracker_y_append) - 10], 'r')
-plt.ylim(1, max_rozliseni_y)
-plt.xlabel('Číslo snímku')
-plt.ylabel('Souřadnice y')
-plt.grid(False)
-plt.legend(('Terč', 'Eyetracker'), loc='best')
-plt.savefig("grafy/" + specification + "/" + specification + "_graf_y_no_0.jpg")
-plt.show()
-
-plt.plot(t_y[10:len(t_y) - 10], target_y[0][10:len(target_y) - 11], 'b')
-plt.plot(t_y[10:len(t_y) - 10], eyetracker_y[0][10:len(eyetracker_y) - 11], 'r')
-plt.ylim(1, max_rozliseni_y)
-plt.xlabel('Číslo snímku')
-plt.ylabel('Souřadnice y')
-plt.grid(False)
-plt.legend(('Terč', 'Eyetracker'), loc='best')
-plt.savefig("grafy/" + specification + "/" + specification + "_graf_y_with_0.jpg")
-plt.show()
-
-plt.plot(t_x_no_0[10:len(t_x_no_0) - 10], target_x_append[10:len(target_x_append) - 10], 'b')
-plt.plot(t_x_no_0[10:len(t_x_no_0) - 10], eyetracker_x_append[10:len(eyetracker_x_append) - 10], 'r')
+plt.plot(t_y_no_0[10:len(t_y_no_0) - 10], target_y_append[10:len(target_y_append) - 10], 'b')
 plt.ylim(1, max_rozliseni_y)
 plt.xlabel('Číslo snímku')
 plt.ylabel('Souřadnice x')
 plt.grid(False)
-plt.legend(('Terč', 'Eyetracker'), loc='best')
+plt.legend(('Eyetracker', 'Terč'), loc='best')
 plt.savefig("grafy/" + specification + "/" + specification + "_graf_x_no_0.jpg")
 plt.show()
 
-plt.plot(t_x[10:len(t_x) - 10], target_x[0][10:len(target_x) - 11], 'b')
-plt.plot(t_x[10:len(t_x) - 10], eyetracker_x[0][10:len(eyetracker_x) - 11], 'r')
+plt.plot(t_y[10:len(t_y) - 10], eyetracker_y[0][10:len(eyetracker_y) - 11], 'r')
+plt.plot(t_y[10:len(t_y) - 10], target_y[0][10:len(target_y) - 11], 'b')
 plt.ylim(1, max_rozliseni_y)
 plt.xlabel('Číslo snímku')
 plt.ylabel('Souřadnice x')
 plt.grid(False)
-plt.legend(('Terč', 'Eyetracker'), loc='best')
+plt.legend(('Eyetracker', 'Terč'), loc='best')
 plt.savefig("grafy/" + specification + "/" + specification + "_graf_x_with_0.jpg")
+plt.show()
+
+plt.plot(t_x_no_0[10:len(t_x_no_0) - 10], eyetracker_x_append[10:len(eyetracker_x_append) - 10], 'r')
+plt.plot(t_x_no_0[10:len(t_x_no_0) - 10], target_x_append[10:len(target_x_append) - 10], 'b')
+plt.ylim(1, max_rozliseni_y)
+plt.xlabel('Číslo snímku')
+plt.ylabel('Souřadnice y')
+plt.grid(False)
+plt.legend(('Eyetracker', 'Terč'), loc='best')
+plt.savefig("grafy/" + specification + "/" + specification + "_graf_y_no_0.jpg")
+plt.show()
+
+plt.plot(t_x[10:len(t_x) - 10], eyetracker_x[0][10:len(eyetracker_x) - 11], 'r')
+plt.plot(t_x[10:len(t_x) - 10], target_x[0][10:len(target_x) - 11], 'b')
+plt.ylim(1, max_rozliseni_y)
+plt.xlabel('Číslo snímku')
+plt.ylabel('Souřadnice y')
+plt.grid(False)
+plt.legend(('Eyetracker', 'Terč'), loc='best')
+plt.savefig("grafy/" + specification + "/" + specification + "_graf_y_with_0.jpg")
 plt.show()
 
