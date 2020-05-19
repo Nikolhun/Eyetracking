@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import cv2
 import ctypes
 
-specification = "8x1_R_F_1_52"
+specification = "8x1_M_F_2_54"
 
 user32 = ctypes.windll.user32  # for windows
 screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
