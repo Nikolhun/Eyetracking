@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 import os
 
 #######################################################################################################################
-specification = "16x9_R_N_2_9"
-max_rozliseni_y = 16
+specification = "11x4_M_F_2_38"
+max_rozliseni_y = 11
+max_rozliseni_x = 4
 #######################################################################################################################
-path = r'C:\Users\notebook\Desktop\Eyetracking\grafy\16x9_R_N_2_9'
+path = r'C:\Users\notebook\Desktop\Eyetracking\grafy\11x4_M_F_2_38'
 if not os.path.exists(path):
     os.makedirs(path)
 target = np.load("mereni/" + specification + "/target_and_measured_vector_array.npy")
@@ -65,7 +66,16 @@ plt.show()
 
 plt.plot(t_x_no_0[10:len(t_x_no_0) - 10], eyetracker_x_append[10:len(eyetracker_x_append) - 10], 'r')
 plt.plot(t_x_no_0[10:len(t_x_no_0) - 10], target_x_append[10:len(target_x_append) - 10], 'b')
-plt.ylim(1, max_rozliseni_y)
+plt.ylim(1, max_rozliseni_x)
+if max_rozliseni_y == 8:
+    plt.yticks([0, 1, 2])
+    plt.ylim(0, 2)
+if max_rozliseni_y == 9:
+    plt.yticks([0, 1, 2, 3])
+    plt.ylim(0, 3)
+if max_rozliseni_y == 11:
+    plt.yticks([1, 2, 3, 4])
+    plt.ylim(1, 4)
 plt.xlabel('Číslo snímku')
 plt.ylabel('Souřadnice y')
 plt.grid(False)
@@ -75,7 +85,16 @@ plt.show()
 
 plt.plot(t_x[10:len(t_x) - 10], eyetracker_x[0][10:len(eyetracker_x) - 11], 'r')
 plt.plot(t_x[10:len(t_x) - 10], target_x[0][10:len(target_x) - 11], 'b')
-plt.ylim(1, max_rozliseni_y)
+plt.ylim(1, max_rozliseni_x)
+if max_rozliseni_y == 8:
+    plt.yticks([0, 1, 2])
+    plt.ylim(0, 2)
+if max_rozliseni_y == 9:
+    plt.yticks([0, 1, 2, 3])
+    plt.ylim(0, 3)
+if max_rozliseni_y == 11:
+    plt.yticks([1, 2, 3, 4])
+    plt.ylim(1, 4)
 plt.xlabel('Číslo snímku')
 plt.ylabel('Souřadnice y')
 plt.grid(False)
