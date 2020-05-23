@@ -1,14 +1,14 @@
 import cv2
 
+
 def delete_corneal_reflection(img, threshold_from_trackbar):
-    '''
+    """
     It removes conrneal reflection.
     :param img: image
-    :param threshold: threshold from trackbar in image window
+    :param threshold_from_trackbar: threshold from trackbar in image window
     :return: image withou corneal reflection
-    '''
-    rgb_frame = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    lab = cv2.cvtColor(rgb_frame, cv2.COLOR_BGR2LAB)
+    """
+    lab = cv2.cvtColor(cv2.cvtColor(img, cv2.COLOR_GRAY2BGR), cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
     _, threshold = cv2.threshold(l, 210, 255, cv2.THRESH_BINARY)
     threshold = cv2.dilate(threshold, None, iterations=1)  # dilate picture
@@ -27,7 +27,5 @@ def delete_corneal_reflection(img, threshold_from_trackbar):
                     l[i, y] = l[i - 1, y]
                 else:
                     l[i, y] = l[i - 1, y]
-    lab = cv2.merge([l, a, b])
-    bgr = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
-    gray_frame = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+    gray_frame = cv2.cvtColor(cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2BGR), cv2.COLOR_BGR2GRAY)
     return gray_frame

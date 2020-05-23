@@ -3,15 +3,14 @@ import cv2
 
 
 def prepare_mask_for_calibration(screensize, press):
-    '''
+    """
     Shows calibration points and prints text to navigate.
     :param screensize: screensize in (rows, collumns)
     :param press: number that is going to be pressed
-    :param output_vector_in_eye_frame: vector rom find vector
     :return: shows window
-    '''
-    mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255  # mask with size of screen and value 255
-    mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+    """
+    #mask = np.zeros((screensize[1], screensize[0]), np.uint8) + 255  # mask with size of screen and value 255
+    mask = cv2.cvtColor((np.zeros((screensize[1], screensize[0]), np.uint8) + 255), cv2.COLOR_GRAY2BGR)
     cv2.namedWindow('calibration', cv2.WINDOW_NORMAL)
     cv2.setWindowProperty('calibration', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # set window to full screen
     circle_size = 40
@@ -79,11 +78,11 @@ def prepare_mask_for_calibration(screensize, press):
 
 
 def lower_left(vector):
-    '''
+    """
     Save coordinates x, y, u, v from lower left corner.
     :param vector: x, y, u, v from vector
     :return: coordinates x, y, u, v
-    '''
+    """
     lower_left_state = False
     lower_left_corner = [0, 0, 0, 0]
     while not lower_left_state:
@@ -93,11 +92,11 @@ def lower_left(vector):
 
 
 def middle_left(vector):
-    '''
+    """
     Save coordinates x, y, u, v from middle left.
     :param vector: x, y, u, v from vector
     :return: coordinates x, y, u, v
-    '''
+    """
     middle_left_state = False
     middle_left_corner = [0, 0, 0, 0]
     while not middle_left_state:
@@ -107,11 +106,11 @@ def middle_left(vector):
 
 
 def upper_left(vector):
-    '''
-        Save coordinates x, y, u, v from upper left corner.
-        :param vector: x, y, u, v from vector
-        :return: coordinates x, y, u, v
-        '''
+    """
+    Save coordinates x, y, u, v from upper left corner.
+    :param vector: x, y, u, v from vector
+    :return: coordinates x, y, u, v
+    """
     upper_left_state = False
     upper_left_corner = [0, 0, 0, 0]
     while not upper_left_state:
@@ -121,11 +120,11 @@ def upper_left(vector):
 
 
 def middle_bottom(vector):
-    '''
+    """
     Save coordinates x, y, u, v from middle bottom.
     :param vector: x, y, u, v from vector
     :return: coordinates x, y, u, v
-    '''
+    """
     middle_bottom_state = False
     middle_bottom_corner = [0, 0, 0, 0]
     while not middle_bottom_state:
@@ -135,11 +134,11 @@ def middle_bottom(vector):
 
 
 def middle_screen(vector):
-    '''
+    """
     Save coordinates x, y, u, v from middle.
     :param vector: x, y, u, v from vector
     :return: coordinates x, y, u, v
-    '''
+    """
     middle_state = False
     middle = [0, 0, 0, 0]
     while not middle_state:
@@ -149,11 +148,11 @@ def middle_screen(vector):
 
 
 def middle_up(vector):
-    '''
+    """
     Save coordinates x, y, u, v from middle up.
     :param vector: x, y, u, v from vector
     :return: coordinates x, y, u, v
-    '''
+    """
     middle_up_state = False
     middle_up_corner = [0, 0, 0, 0]
     while not middle_up_state:
@@ -163,11 +162,11 @@ def middle_up(vector):
 
 
 def lower_right(vector):
-    '''
-        Save coordinates x, y, u, v from lower right corner.
-        :param vector: x, y, u, v from vector
-        :return: coordinates x, y, u, v
-        '''
+    """
+    Save coordinates x, y, u, v from lower right corner.
+    :param vector: x, y, u, v from vector
+    :return: coordinates x, y, u, v
+    """
     lower_right_state = False
     lower_right_corner = [0, 0, 0, 0]
     while not lower_right_state:
@@ -177,11 +176,11 @@ def lower_right(vector):
 
 
 def middle_right(vector):
-    '''
+    """
     Save coordinates x, y, u, v from middle right.
     :param vector: x, y, u, v from vector
     :return: coordinates x, y, u, v
-    '''
+    """
     middle_right_state = False
     middle_right_corner = [0, 0, 0, 0]
     while not middle_right_state:
@@ -191,11 +190,11 @@ def middle_right(vector):
 
 
 def upper_right(vector):
-    '''
+    """
     Save coordinates x, y, u, v from upper right corner.
     :param vector: x, y, u, v from vector
     :return: coordinates x, y, u, v
-    '''
+    """
     upper_right_state = False
     upper_right_corner = [0, 0, 0, 0]
     while not upper_right_state:

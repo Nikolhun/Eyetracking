@@ -7,26 +7,11 @@ def normalize_array(array, value):
     Normalize array to have values 0-1.
     :param array: array you want to normalize
     :param value: value you want to normalize
-    :return: normalized_array, normlaized_value
+    :return: normalized_array, normalized_value
     """
-    normlaized_value = value / array.max()
+    normalized_value = value / array.max()
     normalized_array = array / array.max()
-    return normalized_array, normlaized_value
-
-
-#def difference_value(u_interpolated_array, v_interpolated_array):
-  #  """
-  #  Get maximum difference value for function find_closest_in_array
-  #  :param u_interpolated_array: u vector parameter (magnitude)
- #   :param v_interpolated_array: v vector parameter (direction)
- #   :return: max_difference_u, max_difference_v
-  #  """
-  #  # max_difference_u = (u_interpolated_array.max() - u_interpolated_array.min())/30
-  #  # max_difference_v = (v_interpolated_array.max() - v_interpolated_array.min())/20
- #   max_difference_u = u_interpolated_array.max()/2
- #   max_difference_v = v_interpolated_array.max()/2
-#    print("difference", max_difference_u, max_difference_v)
- #   return max_difference_u, max_difference_v
+    return normalized_array, normalized_value
 
 
 def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max_difference_u, max_difference_v):
@@ -44,13 +29,13 @@ def find_closest_in_array(u_interpolated_array, v_interpolated_array, value, max
     result_x = 0
     result_y = 0
     result_diff = 0
+    nothing_found = 0
 
     if u_interpolated_array.shape == v_interpolated_array.shape:
         u_best_numbers = []
         u_best_number_x = []
         u_best_number_y = []
         u_best_number_diff = []
-        nothing_found = 0
 
         for i in range(0, u_interpolated_array.shape[0]):
             for y in range(0, u_interpolated_array.shape[1]):
@@ -118,9 +103,11 @@ def show_eyetracking(coordinate_x, coordinate_y, interpolation_size, mask_bgr,
     Visualize eyetracking
     :param coordinate_x: coordinate x
     :param coordinate_y: coordinate y
-    :param window_name: window name in string
     :param interpolation_size: interpolation size (x,y)
     :param mask_bgr: output in rgb
+    :param coordinates_of_center: center coordinates in (x,y)
+    :param hit_target: was target hitted?
+    :param hit_target_value: hitted target value
     :return:
     """
 
@@ -151,27 +138,22 @@ def show_eyetracking(coordinate_x, coordinate_y, interpolation_size, mask_bgr,
         hit_target = True
         hit_target_value.append(hit_target)
 
-    #else:
-     #   mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][0] = 0  # red color (0, 0, 255)
-      #  mask_bgr[np.abs(coordinate_x - (interpolation_size[1] - 1))][coordinate_y][1] = 0
-
     coordinate_x = np.abs(coordinate_x - (interpolation_size[1] - 1))  # coordinate x
 
     return coordinate_x, coordinate_y, mask_bgr, hit_target, hit_target_value
 
 
 def dimension(img_before, scale_percent):
-    '''
+    """
     Get dimension to reshape picture
     :param img_before: image in bgr
     :param scale_percent: percenteage
-    :return:
-    '''
+    :return: reshape_dimension
+    """
     mask_gray = cv2.cvtColor(img_before, cv2.COLOR_BGR2GRAY)
     width = int(mask_gray.shape[1] * scale_percent / 100)
     height = int(mask_gray.shape[0] * scale_percent / 100)
-    reshape_dimension = (width, height)
-    return reshape_dimension
+    return width, height
 
 
 def empty_mask_for_eyetracking(size_of_output_screen):
@@ -180,8 +162,8 @@ def empty_mask_for_eyetracking(size_of_output_screen):
     :param size_of_output_screen: Screen size for example (16, 9)
     :return: empty array for saving eyetraking
     """
-    mask_for_eyetracking = np.zeros((size_of_output_screen[1], size_of_output_screen[0]), np.uint8) + 255
-    mask_for_eyetracking_bgr = cv2.cvtColor(mask_for_eyetracking, cv2.COLOR_GRAY2BGR)
+    mask_for_eyetracking_bgr = cv2.cvtColor(np.zeros((size_of_output_screen[1], size_of_output_screen[0]), np.uint8)
+                                            + 255, cv2.COLOR_GRAY2BGR)
     return mask_for_eyetracking_bgr
 
 
@@ -197,11 +179,9 @@ def make_array_from_vectors(target_coordinate_x, target_coordinate_y, measured_v
     :param measured_vector_true_v: value of measured vector v
     :return: array of results containing all numbers above
     """
-
     target_and_measured_vector_array = np.array([[target_coordinate_x], [target_coordinate_y],
                                                  [measured_vector_true_u_normalized],
                                                  [measured_vector_true_v_normalized],
                                                  [measured_vector_true_u], [measured_vector_true_v]])
 
     return target_and_measured_vector_array
-

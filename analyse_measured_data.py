@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 import cv2
 import ctypes
 
-specification = "8x1_M_F_2_54"
+# ---------------------------------- Add name of your file ----------------------------------------------------------- #
+specification = "8x1_test"
 
 user32 = ctypes.windll.user32  # for windows
 screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
-
 #screensize = (1280, 720) rpi
+
 # ---------------------------------- Import measured data ----------------------------------------------------------- #
 eyetracker_data = np.load('results/result_eyetracker_array.npy')
 target_vector_data = np.load('results/target_and_measured_vector_array.npy')
@@ -80,8 +81,7 @@ np.save("results/" + specification + "_accuracy_v_normalized", v_normalized)
 np.save("results/" + specification + "_accuracy_u", u)
 np.save("results/" + specification + "_accuracy_v", v)
 
-# ---------------------------------- Excel -------------------------------------------------------------------------- #
-
+# ---------------------------------- Make excel --------------------------------------------------------------------- #
 data = {'X': x,
         'Y': y,
         'U': u,
@@ -90,7 +90,6 @@ data = {'X': x,
         'V normalized': v_normalized,
         'U percent': u_normalized_percent,
         'V percent': v_normalized_percent}
-
 
 df = pd.DataFrame(data, columns=['X', 'Y', 'U', 'V', 'U normalized', 'V normalized', 'U percent', 'V percent', '', '',
                                  'Mean', 'Max'])
@@ -149,7 +148,6 @@ target_save_nearest = cv2.resize(target_save, screensize,
 target_save_nearest_bgr = cv2.cvtColor(target_save_nearest, cv2.COLOR_BGR2GRAY)
 target_save_nearest_bgr = target_save_nearest_bgr / target_save_nearest_bgr.max()
 target_save_nearest_bgr = np.abs(target_save_nearest_bgr - 1)
-#target_save_nearest_bgr = target_save_nearest_bgr*target_save_nearest_bgr
 
 # for cubic target
 target_save_cubic = cv2.resize(target_save, screensize,
@@ -157,7 +155,6 @@ target_save_cubic = cv2.resize(target_save, screensize,
 target_save_cubic_bgr = cv2.cvtColor(target_save_cubic, cv2.COLOR_BGR2GRAY)
 target_save_cubic_bgr = target_save_cubic_bgr / target_save_cubic_bgr.max()
 target_save_cubic_bgr = np.abs(target_save_cubic_bgr - 1)
-#target_save_cubic_bgr = target_save_cubic_bgr*target_save_cubic_bgr
 
 # for nearest eyetracker
 eyetracker_screen_gray_nearest = cv2.cvtColor(eyetracker_screen_bgr_nearest, cv2.COLOR_BGR2GRAY)
@@ -172,35 +169,35 @@ eyetracker_screen_gray = cv2.cvtColor(eyetracker_screen_bgr, cv2.COLOR_BGR2GRAY)
 eyetracker_screen_gray = eyetracker_screen_gray / eyetracker_screen_gray.max()
 eyetracker_screen_gray = np.abs(eyetracker_screen_gray - 1)
 eyetracker_screen_gray = eyetracker_screen_gray*eyetracker_screen_gray
-# ---------------------------------- Heat map ---------------------------------------------------------------- #
+# ---------------------------------- Heat maps ---------------------------------------------------------------- #
 plt.rcParams['figure.figsize'] = (16, 9)
 # heatmap for nearest target
-midpoint_nearest = (target_save_nearest_bgr.max() - target_save_nearest_bgr.min())/1.5
-heat_map_nearest = sb.heatmap(target_save_nearest_bgr, center=midpoint_nearest, vmin=0, vmax=1, xticklabels=False,
+midpoint_nearest_target = (target_save_nearest_bgr.max() - target_save_nearest_bgr.min())/1.5
+heat_map_nearest_target = sb.heatmap(target_save_nearest_bgr, center=midpoint_nearest_target, vmin=0, vmax=1, xticklabels=False,
                               yticklabels=False, cmap="Blues", cbar=False)
 plt.show()
-figure_nearest = heat_map_nearest.get_figure().savefig("results/" + specification + "_heat_map_nearest_target.png")
+heat_map_nearest_target.get_figure().savefig("results/" + specification + "_heat_map_nearest_target.png")
 
 # heatmap for cubic target
-midpoint_nearest = (target_save_cubic_bgr.max() - target_save_cubic_bgr.min())/1.5
-heat_map_nearest = sb.heatmap(target_save_cubic_bgr, center=midpoint_nearest, vmin=0, vmax=1, xticklabels=False,
+midpoint_cubic_targer = (target_save_cubic_bgr.max() - target_save_cubic_bgr.min())/1.5
+heat_map_cubic_target = sb.heatmap(target_save_cubic_bgr, center=midpoint_cubic_targer, vmin=0, vmax=1, xticklabels=False,
                               yticklabels=False, cmap="Blues", cbar=False)
 plt.show()
-figure_nearest = heat_map_nearest.get_figure().savefig("results/" + specification + "_heat_map_cubic_target.png")
+heat_map_cubic_target.get_figure().savefig("results/" + specification + "_heat_map_cubic_target.png")
 
 # heatmap for nearest eyetracker
-midpoint_nearest = (eyetracker_screen_gray_nearest.max() - eyetracker_screen_gray_nearest.min())/1.5
-heat_map_nearest = sb.heatmap(eyetracker_screen_gray_nearest, center=midpoint_nearest, vmin=0, vmax=1, xticklabels=False,
+midpoint_nearest_eyetracker = (eyetracker_screen_gray_nearest.max() - eyetracker_screen_gray_nearest.min())/1.5
+heat_map_nearest_eyetracker = sb.heatmap(eyetracker_screen_gray_nearest, center=midpoint_nearest_eyetracker, vmin=0, vmax=1, xticklabels=False,
                               yticklabels=False, cmap="Blues", cbar=False)
 plt.show()
-figure_nearest = heat_map_nearest.get_figure().savefig("results/" + specification + "_heat_map_nearest.png")
+heat_map_nearest_eyetracker.get_figure().savefig("results/" + specification + "_heat_map_nearest.png")
 
 # heatmap for cubic eyetracker
-midpoint_cubic = (eyetracker_screen_gray.max() - eyetracker_screen_gray.min())/1.5
-heat_map_cubic = sb.heatmap(eyetracker_screen_gray, center=midpoint_cubic, vmin=0, vmax=1, xticklabels=False,
+midpoint_cubic_eyetracker = (eyetracker_screen_gray.max() - eyetracker_screen_gray.min())/1.5
+heat_map_cubic_eyetracker = sb.heatmap(eyetracker_screen_gray, center=midpoint_cubic_eyetracker, vmin=0, vmax=1, xticklabels=False,
                             yticklabels=False, cmap="Blues", cbar=False)
 plt.show()
-figure_cubic = heat_map_cubic.get_figure().savefig("results/" + specification + "_heat_map_cubic.png") #dpi = 400
+heat_map_cubic_eyetracker.get_figure().savefig("results/" + specification + "_heat_map_cubic.png") #dpi = 400
 
 print("In this measurement was", unfined_vectors, "not found vectors.")
 

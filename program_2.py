@@ -69,14 +69,17 @@ def main():
     print("Set threshold for left and right eye.")
     print("Press v to show calibrating vector.")
 
+# ---------------------------------- Making empty arrays for future use -------------------------------------------- #
     mask_for_eyetracking_bgr = empty_mask_for_eyetracking(size_of_output_screen)
     mask_for_eyetracking_target = empty_mask_for_eyetracking(size_of_output_screen)
     mask_for_eyetracking_target_save = empty_mask_for_eyetracking(size_of_output_screen)
     mask_bgr_reshaped_nearest = mask_for_eyetracking_bgr
     mask_reshape_dimenstion = dimension(mask_for_eyetracking_bgr,
                                         int((screensize[1] * 100) / size_of_output_screen[0]))
+# ---------------------------------- Reaching the port 0 for video capture ------------------------------------------ #
+    cap = cv2.VideoCapture(0)
 
-    cap = cv2.VideoCapture(0)  # reaching the port 0 for video capture
+# ---------------------------------- Starting making video ---------------------------------------------------------- #
     fourcc_detection = cv2.VideoWriter_fourcc(*'XVID')
     out_detection = cv2.VideoWriter('detection.mkv', fourcc_detection, 20.0, (int(cap.get(3)), int(cap.get(4))))
     fourcc_mask = cv2.VideoWriter_fourcc(*'XVID')
@@ -151,8 +154,8 @@ def main():
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
+        # frame = frame[::4, ::4]  # for rpi
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # change color from rgb to gray
-        # gray = gray[::4, ::4]  # for rpi
 
 # ---------------------------------- Dlib Landmark face detection --------------------------------------------------- #
         faces = detector_dlib(gray)
@@ -194,8 +197,6 @@ def main():
                         if m_left["m00"] > 1:
                             cx_left = int(m_left["m10"] / m_left["m00"])  # x coordinate for middle of blob
                             cy_left = int(m_left["m01"] / m_left["m00"])  # y coordinate for middle of blob
-                            # cv2.drawContours(eye_no_eyebrows_left, [c], -1, (0, 255, 0), 2)
-                            # cv2.circle(left_eye_crop, (cx_left, cy_left), 1, (0, 0, 255), 2)
                             # position of left pupil in whole frame
                             left_center_pupil = [cx_left + min_left[0], cy_left + min_left[1]]
                             # position of left pupil in eye frame
@@ -219,8 +220,6 @@ def main():
                         if m_right["m00"] > 1:
                             cx_right = int(m_right["m10"] / m_right["m00"])  # x coordinate for middle of blob
                             cy_right = int(m_right["m01"] / m_right["m00"])  # y coordinate for middle of blob
-                            # cv2.drawContours(eye_no_eyebrows_right, [c], -1, (0, 255, 0), 2)
-                            # cv2.circle(right_eye_crop, (cx_right, cy_right), 1, (0, 0, 255), 2)
                             # position of right pupil in whole frame
                             right_center_pupil = [cx_right + min_right[0], cy_right + min_right[1]]
                             # position of right pupil in eye frame
@@ -230,10 +229,10 @@ def main():
 
 # ---------------------------------- Show vector after pressing v --------------------------------------------------- #
         if k == ord('v') and not press_v:
-            press_v = True
+            press_v = True # for active vector drawing
             print("Vector mode activated.")
-            print('For starting calibration mode press c.')
-        #if press_v:
+            print('For starting calibration mode press p.')
+
             # finding calibration vector
             calibrating_vector_in_frame_left = calibrate_vector_eye_center(left_center_pupil_in_eye_frame)
             calibrating_vector_in_frame_right = calibrate_vector_eye_center(right_center_pupil_in_eye_frame)
@@ -271,7 +270,7 @@ def main():
                     cv2.arrowedLine(frame, start_left, end_left, color=(0, 255, 0), thickness=1)
                     cv2.arrowedLine(frame, start_right, end_right, color=(0, 255, 0), thickness=1)
 
-# ---------------------------------- Get main point for calibration  ------------------------------------------------ #
+# ---------------------------------- Get nine calibration points ------------------------------------------------ #
         if k == ord('c') and not press_c:
             prepare_mask_for_calibration(screensize, 1)
             press_1 = False
@@ -397,6 +396,7 @@ def main():
             send_calibration_data_state = False
             cv2.destroyWindow('calibration')
 
+            # print calibrating points vectors
             print("Data for calibration were measured successfully.")
             print("Lower left corner: ", lower_left_corner)
             print("Middle left: ", middle_left_corner)
@@ -420,13 +420,13 @@ def main():
 
 # ---------------------------------- Start eyetracking -------------------------------------------------------------- #
         if k == ord('e') and not press_e:
-            press_e = True
+            press_e = True # activates eyetracking mode
             press_s = False
             print("You can choose between random target and fix target."
                   "For random target press n, for fix target press m.")
             print("Eyetracker starts...")
 
-        if press_e:
+        if press_e:  # active eytracking mode
             normalized_u_interp, normalized_u = normalize_array(u_interp, output_vector_in_eye_frame[2])  # normalize u
             normalized_v_interp, normalized_v = normalize_array(v_interp, output_vector_in_eye_frame[3])  # normalize v
 
@@ -436,7 +436,7 @@ def main():
                                                                             (normalized_u, normalized_v),
                                                                             0.2, 0.2)
 
-# ---------------------------------- Change target after pressing m -------------------------------------------------- #
+# ---------------------------------- Start moving target after pressing m ------------------------------------------- #
             if k == ord('m'):
                 print("Target mode activated.")
                 target_m = True
@@ -444,9 +444,10 @@ def main():
                 method = "m"
                 print("Moving target started")
 
-            if target_m == True:
+            if target_m:  # method is moving target
                 step = 0
 
+                # delete old target
                 draw_line(mask_for_eyetracking_target, coordinates_of_center_dot, step, (255, 255, 255))
 
                 # get new center
@@ -456,7 +457,7 @@ def main():
                                                                                       change_accepted,
                                                                                       acceptation_of_change)
                 coordinates_of_center_dot = coordinates_of_center_dot_out
-                if len(acceptation_of_change) == speed_of_target:
+                if len(acceptation_of_change) == speed_of_target:  # buffer for target
                     change_accepted = True
                     acceptation_of_change = []
                 part = part_out
@@ -467,19 +468,22 @@ def main():
                 hit_target_value = []
                 hit_target = False
 
+                # draw target
                 draw_line(mask_for_eyetracking_target, coordinates_of_center_dot, step, (255, 0, 0))
 # ---------------------------------- Random target after pressing n -------------------------------------------------- #
-            if k == ord('n') and press_n == False:
+            if k == ord('n') and not press_n:  # recount coordinates for target
                 mask_for_eyetracking_bgr = empty_mask_for_eyetracking(size_of_output_screen)
                 press_n = True
-            elif k == ord('n') and press_n == True:
+            elif k == ord('n') and press_n:  # start moving target if not started
                 print("Target mode activated.")
                 print("Press n for next target.")
                 method = "n"
                 step = 0
 
+                # delete old target
                 draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 255, 255))
 
+                # check if there is a eyetracker value before placing target
                 mask_for_eyetracking_bgr_out, draw_point_after_next_target, \
                 value_of_point = check_target_spot_before(draw_point_after_next_target, hit_target,
                                                           mask_for_eyetracking_bgr, coordinates_of_center_dot,
@@ -492,10 +496,12 @@ def main():
                 hit_target_value = []
                 hit_target = False
 
+                # check if eyetracket hitted target
                 mask_for_eyetracking_bgr_out, draw_point_after_next_target, \
                 value_of_point = check_target_spot_after(mask_for_eyetracking_bgr, coordinates_of_center_dot)
                 mask_for_eyetracking_bgr = mask_for_eyetracking_bgr_out
 
+                # draw target
                 draw_line(mask_for_eyetracking_bgr, coordinates_of_center_dot, step, (255, 0, 0))
 
 # ---------------------------------- Draw/show eyetracking ---------------------------------------------------------- #
@@ -514,9 +520,10 @@ def main():
             hit_target_value = show_eyetracking(result_x, result_y, size_of_output_screen,
                                                 mask_for_eyetracking_bgr, coordinates_of_center_dot,
                                                 hit_target, hit_target_value)
+
+            # show target
             coor_x_target, coor_y_target, \
-            mask_for_eyetracking_target_save = show_target(size_of_output_screen, mask_for_eyetracking_target_save,
-                                                           coordinates_of_center_dot)
+            mask_for_eyetracking_target_save = show_target(mask_for_eyetracking_target_save, coordinates_of_center_dot)
 
 # ---------------------------------- Saving results ----------------------------------------------------------------- #
             dot_0 = coordinates_of_center_dot[1]
@@ -564,9 +571,10 @@ def main():
 
             out_detection.write(frame)
             out_mask.write(mask_bgr_reshaped_nearest)
-            if method == "n":
+
+            if method == "n":  # for random target
                 cv2.imshow("Eyetracking", mask_bgr_reshaped_nearest)
-            elif method == "m":
+            elif method == "m":  # for animated target
                 cv2.imshow("Target", mask_bgr_target_reshaped_nearest)
 
 # ---------------------------------- Stop eyetracking --------------------------------------------------------------- #
