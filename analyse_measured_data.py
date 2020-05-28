@@ -6,7 +6,7 @@ import cv2
 import ctypes
 
 # ---------------------------------- Add name of your file ----------------------------------------------------------- #
-specification = "8x1_test"
+specification = "reklama"
 
 user32 = ctypes.windll.user32  # for windows
 screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
