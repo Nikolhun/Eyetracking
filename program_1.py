@@ -1,6 +1,5 @@
 import cv2
 import dlib
-import ctypes  # for windows
 import numpy as np
 from dlib_landmarks import view_face_frame, draw_point, eye_center_dlib, landmarks_array, fill_frame, crop_eyes
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
@@ -13,6 +12,7 @@ from eyetracking import find_closest_in_array, show_eyetracking, normalize_array
     empty_mask_for_eyetracking, make_array_from_vectors
 from make_target import change_coordinates_of_target, change_coordinates_of_target_random, draw_line,\
     check_target_spot_before, check_target_spot_after, heat_map, show_target
+# import ctypes  # for windows
 
 #######################################################################################################################
 # ------------------------------- Initiation part ------------------------------------------------------------------- #
@@ -22,9 +22,9 @@ predictor_dlib = dlib.shape_predictor("Dlib_landmarks/shape_predictor_68_face_la
 
 # ------------------------------ Settup and screen size setting ----------------------------------------------------- #
 print("Welcome in Eyetracking application!")
-#screensize = (120, 1280) # rpi
-user32 = ctypes.windll.user32  # for windows
-screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
+screensize = (120, 1280)  # rpi
+# user32 = ctypes.windll.user32  # for windows
+# screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
 print("Choose resolution of your eyetraker.")
 print("a) 16 x 9")
 print("b) 11 x 4")
@@ -155,7 +155,7 @@ def main():
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
-        #frame = frame[::4, ::4]  # for rpi
+        frame = frame[::4, ::4]  # for rpi
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # change color from rgb to gray
 
 # ---------------------------------- Dlib Landmark face detection --------------------------------------------------- #

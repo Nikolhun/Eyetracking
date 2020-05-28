@@ -1,18 +1,18 @@
 import cv2
 import dlib
-import ctypes # for windows
 import numpy as np
 from dlib_landmarks import view_face_frame, draw_point, eye_center_dlib, landmarks_array, fill_frame, crop_eyes
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
 from corneal_reflection import delete_corneal_reflection
 from vector import find_vector, calibrate_vector_eye_center, vector_start_center
-from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left,\
+from calibration import upper_left, upper_right, middle_screen, lower_left, lower_right, middle_bottom, middle_left, \
     middle_right, middle_up, prepare_mask_for_calibration
 from interpolate import interpolation
 from eyetracking import find_closest_in_array, show_eyetracking, normalize_array, dimension, \
     empty_mask_for_eyetracking, make_array_from_vectors
-from make_target import change_coordinates_of_target, change_coordinates_of_target_random, draw_line,\
+from make_target import change_coordinates_of_target, change_coordinates_of_target_random, draw_line, \
     check_target_spot_before, check_target_spot_after, heat_map, show_target
+# import ctypes  # for windows
 
 #######################################################################################################################
 # ------------------------------- Initiation part ------------------------------------------------------------------- #
@@ -20,11 +20,11 @@ from make_target import change_coordinates_of_target, change_coordinates_of_targ
 detector_dlib = dlib.get_frontal_face_detector()
 predictor_dlib = dlib.shape_predictor("Dlib_landmarks/shape_predictor_68_face_landmarks.dat")
 
-#------------------------------ Settup and screen size setting ----------------------------------------------------- #
+# ------------------------------ Settup and screen size setting ----------------------------------------------------- #
 print("Welcome in Eyetracking application!")
-#screensize = (120, 1280) # rpi
-user32 = ctypes.windll.user32  # for windows
-screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
+screensize = (120, 1280)  # rpi
+# user32 = ctypes.windll.user32  # for windows
+# screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
 print("Choose resolution of your eyetraker.")
 print("a) 16 x 9")
 print("b) 11 x 4")
@@ -50,6 +50,7 @@ elif eyetracker_resolution == "d":
 else:
     print("Choose between a to d.")
     size_of_output_screen = []
+
 
 #######################################################################################################################
 # ------------------------------- Creating trackbar ----------------------------------------------------------------- #
@@ -127,6 +128,8 @@ def main():
     k = 0
     press_n = False
     target_m = False
+    calibrating_vector_in_frame_left = [0, 0, 0, 0]
+    calibrating_vector_in_frame_right = [0, 0, 0, 0]
     coordinates_of_center_dot = (int((20 * size_of_output_screen[0] - 1) / 100),
                                  int((20 * size_of_output_screen[1] - 1) / 100))
     draw_point_after_next_target = False
@@ -154,13 +157,13 @@ def main():
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
-        # frame = frame[::4, ::4]  # for rpi
+        frame = frame[::4, ::4]  # for rpi
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # change color from rgb to gray
 
 # ---------------------------------- Dlib Landmark face detection --------------------------------------------------- #
         faces = detector_dlib(gray)
         for face in faces:
-           # view_face_frame(face, frame)  # view face frame
+            # view_face_frame(face, frame)  # view face frame
             landmarks = predictor_dlib(gray, face)  # detect face structures using landmarks
 
             # crop eyes from the video
@@ -229,7 +232,7 @@ def main():
 
 # ---------------------------------- Show vector after pressing v --------------------------------------------------- #
         if k == ord('v') and not press_v:
-            press_v = True # for active vector drawing
+            press_v = True  # for active vector drawing
             print("Vector mode activated.")
             print('For starting calibration mode press p.')
 
@@ -388,11 +391,10 @@ def main():
 
 # ---------------------------------- Show calibration points and interpolate them ----------------------------------- #
         if upper_left_corner != [0, 0, 0, 0] and upper_right_corner != [0, 0, 0, 0] and \
-            lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
-            middle_right_corner != [0, 0, 0, 0] and middle_up_corner != [0, 0, 0, 0] and \
-            middle_bottom_corner != [0, 0, 0, 0] and middle_left_corner != [0, 0, 0, 0] and \
-            send_calibration_data_state and k == 13 and not press_e:
-
+                lower_left_corner != [0, 0, 0, 0] and lower_right_corner != [0, 0, 0, 0] and middle != [0, 0, 0, 0] and \
+                middle_right_corner != [0, 0, 0, 0] and middle_up_corner != [0, 0, 0, 0] and \
+                middle_bottom_corner != [0, 0, 0, 0] and middle_left_corner != [0, 0, 0, 0] and \
+                send_calibration_data_state and k == 13 and not press_e:
             send_calibration_data_state = False
             cv2.destroyWindow('calibration')
 
@@ -420,21 +422,20 @@ def main():
 
 # ---------------------------------- Start eyetracking -------------------------------------------------------------- #
         if k == ord('e') and not press_e:
-            press_e = True # activates eyetracking mode
+            press_e = True  # activates eyetracking mode
             press_s = False
             print("You can choose between random target and fix target."
                   "For random target press n, for fix target press m.")
             print("Eyetracker starts...")
 
-        if press_e:  # active eytracking mode
+        if press_e:  # active eyetracking mode
             normalized_u_interp, normalized_u = normalize_array(u_interp, output_vector_in_eye_frame[2])  # normalize u
             normalized_v_interp, normalized_v = normalize_array(v_interp, output_vector_in_eye_frame[3])  # normalize v
 
             # find best vector in interpolated field
-            result_numbers, result_x,\
-                result_y, result_diff, nothing_found = find_closest_in_array(normalized_u_interp, normalized_v_interp,
-                                                                            (normalized_u, normalized_v),
-                                                                            0.2, 0.2)
+            result_numbers, result_x, \
+            result_y, result_diff, nothing_found = find_closest_in_array(normalized_u_interp, normalized_v_interp,
+                                                                         (normalized_u, normalized_v), 0.2, 0.2)
 
 # ---------------------------------- Start moving target after pressing m ------------------------------------------- #
             if k == ord('m'):
@@ -508,7 +509,7 @@ def main():
             if method == "n":
                 cv2.namedWindow("Eyetracking", cv2.WINDOW_NORMAL)  # make new window with window name
                 cv2.setWindowProperty("Eyetracking", cv2.WND_PROP_FULLSCREEN,
-                                    cv2.WINDOW_FULLSCREEN)  # set window to full screen
+                                      cv2.WINDOW_FULLSCREEN)  # set window to full screen
             elif method == "m":
                 cv2.namedWindow("Target", cv2.WINDOW_NORMAL)  # make new window with window name
                 cv2.setWindowProperty("Target", cv2.WND_PROP_FULLSCREEN,
@@ -565,7 +566,7 @@ def main():
 
 # ---------------------------------- Write video and show image ----------------------------------------------------- #
             mask_bgr_reshaped_nearest = cv2.resize(mask_for_eyetracking_bgr, mask_reshape_dimenstion,
-                                           interpolation=cv2.INTER_NEAREST)
+                                                   interpolation=cv2.INTER_NEAREST)
             mask_bgr_target_reshaped_nearest = cv2.resize(mask_for_eyetracking_target, mask_reshape_dimenstion,
                                                           interpolation=cv2.INTER_NEAREST)
 

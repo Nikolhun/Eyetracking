@@ -1,6 +1,5 @@
 import cv2
 import dlib
-import ctypes  # for windows
 import numpy as np
 import math
 from detect_pupil import converting_gray_to_hsv, filtration, gama_correction, preprocessing, contours_of_shape
@@ -12,6 +11,7 @@ from eyetracking import find_closest_in_array, show_eyetracking, normalize_array
     empty_mask_for_eyetracking, make_array_from_vectors
 from make_target import change_coordinates_of_target, change_coordinates_of_target_random, draw_line,\
     check_target_spot_before, check_target_spot_after, heat_map, show_target
+# import ctypes  # for windows
 
 
 #######################################################################################################################
@@ -22,9 +22,9 @@ predictor_dlib = dlib.shape_predictor("Dlib_landmarks/shape_predictor_68_face_la
 
 # ------------------------------ Settup and screen size setting ----------------------------------------------------- #
 print("Welcome in Eyetracking application!")
-#screensize = (120, 1280) # rpi
-user32 = ctypes.windll.user32  # for windows
-screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
+screensize = (120, 1280) # rpi
+# user32 = ctypes.windll.user32  # for windows
+# screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)  # for windows
 print("Choose resolution of your eyetraker.")
 print("a) 16 x 9")
 print("b) 11 x 4")
@@ -180,11 +180,11 @@ def main():
 # ---------------------------------- Get the video frame and prepare it for detection ------------------------------- #
     while cap.isOpened():  # while th video capture is
         _, frame = cap.read()  # convert cap to matrix for future work
-        # frame = frame[::4, ::4]  # for rpi
+        frame = frame[::4, ::4]  # for rpi
         frame = cv2.flip(frame, 1)  # flip video to not be mirrored
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # change color from rgb to gray
 
-# ---------------------------------- Crop image to one eye ---------------------------------------------------------- #
+# ---------------------------------- Crop image and show frame for one eye ------------------------------------------ #
         crop_gray = gray[180:300, 240:400]
         cv2.rectangle(frame, (240, 180), (240+160, 180+120), (0, 255, 0), 2)
         move_frame_x = 240
@@ -220,7 +220,8 @@ def main():
         if press_v:  # active vector
             press_c = False
             # finding eye center
-            eye_center_coordinates_in_frame, eye_center_coordinates = eye_center(crop_gray, (move_frame_y, move_frame_x))
+            eye_center_coordinates_in_frame, eye_center_coordinates = eye_center(crop_gray,
+                                                                                 (move_frame_y, move_frame_x))
 
             # finding vector
             vector = find_vector(pupil_center_in_frame, eye_center_coordinates_in_frame)
@@ -514,8 +515,6 @@ def main():
                 dot_1 = -1
                 normalized_u = -1
                 normalized_v = -1
-                #vector[2] = int(-1)
-                #vector[3] = int(-1)
 
             result_eyetracker_coordinate_x.append(coor_x)
             result_eyetracker_coordinate_y.append(coor_y)
