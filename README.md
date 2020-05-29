@@ -1,6 +1,8 @@
 # Eyetracking
 Eye movement tracking using the Raspberry Pi platform.
 
+Attention!! You need file "shape_predictor_68_face_landmarks.dat" in folder "Dlib_landmarks".
+
 There are 3 types of eyetracking:
 1. Two eyes measuring with vector starting in eye region center - "program_1.py" 
 2. Two eyes measuring with vector starting in position given by key press - "program_2.py"
@@ -41,6 +43,11 @@ Program is manageable with keyboard buttons, navigation is in command line or at
 
 
 (Program is made for Raspberry Pi 3, but it also runs on Windowns. For Windows compability uncomment few notes with sign #windows and comment few notes with sign #rpi.)
+
+## Measured data
+Folder "Measured_data" contains measured data labeled according to the measurements method. 
+
+
 
 
 
